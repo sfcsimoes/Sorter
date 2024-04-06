@@ -1,0 +1,19 @@
+// {
+// 	"compilerOptions": {
+// 		"strict": true,
+// 		"target": "ESNext",
+// 		"module": "NodeNext",
+// 		"esModuleInterop": true,
+// 		"forceConsistentCasingInFileNames": true,
+// 		"skipLibCheck": true
+// 	}
+// }
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "outDir": "dist",
+    "strict": true,
+    "lib": ["esnext"],
+    "esModuleInterop": true
+  }
+}

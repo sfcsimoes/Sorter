@@ -24,40 +24,6 @@ export default function TabOneScreen() {
         .catch((error) => console.error(error));
         // .finally(() => setLoading(false));
   });
-
-  // const ORDERS = [
-  //   {
-  //     name: "Encomenda 1",
-  //     date: "2024-03-19T23:37:09.018Z",
-  //     status: "Pendente",
-  //   },
-  //   {
-  //     name: "Encomenda 2",
-  //     date: "2024-03-19T23:37:09.018Z",
-  //     status: "Pendente",
-  //   },
-  //   {
-  //     name: "Encomenda 3",
-  //     date: "2024-03-18T23:37:09.018Z",
-  //     status: "Concluida",
-  //   },
-  //   {
-  //     name: "Encomenda 4",
-  //     date: "2024-03-17T23:37:09.018Z",
-  //     status: "Concluida",
-  //   },
-  //   {
-  //     name: "Encomenda 5",
-  //     date: "2024-03-19T23:37:09.018Z",
-  //     status: "Concluida",
-  //   },
-  //   {
-  //     name: "Encomenda 6",
-  //     date: "2024-03-19T23:37:09.018Z",
-  //     status: "Concluida",
-  //   },
-  // ];
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Tab One t</Text>

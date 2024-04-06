@@ -100,6 +100,5 @@ app.put('/shipmentOrders/:id', async (req, res) => {
 
 const server = app.listen(3100, () =>
   console.log(`
-🚀 Server ready at: http://localhost:3100
-⭐️ See sample requests: http://pris.ly/e/ts/rest-express#3-using-the-rest-api`),
+🚀 Server ready at: http://localhost:3100`),
 )

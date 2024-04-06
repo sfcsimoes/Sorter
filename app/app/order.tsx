@@ -29,8 +29,7 @@ export interface ProductsInShipmentOrdersEntity {
 export interface Products {
   id: number;
   name: string;
-  sku: string;
-  ian: string;
+  ean: string;
   isTransportationBox: boolean;
   createdAt: string;
   updatedAt: string;
@@ -128,12 +127,12 @@ function List(props: {
                   <Text style={styles.subTitle}>
                     Quantidade:{" "}
                     {
-                      props.readings.filter((i) => i == item.products?.ian)
+                      props.readings.filter((i) => i == item.products?.ean)
                         .length
                     }{" "}
                     / {item.units}
                   </Text>
-                  <Text style={styles.subTitle}>EAN: {item.products?.ian}</Text>
+                  <Text style={styles.subTitle}>EAN: {item.products?.ean}</Text>
                 </View>
                 <View style={{ marginLeft: 2, flex: 2, flexDirection: "row" }}>
                   <Aux
@@ -223,6 +222,17 @@ function List(props: {
   );
 }
 
+function ShowCompleteButton(props: {
+  show: Boolean;
+}) {
+  if(props.show){
+    return (
+      <StyledButton onPress={undefined} title="Finalizar" variant="default" />
+    );
+  }
+  
+}
+
 export default function App() {
   const [permission, requestPermission] = useCameraPermissions();
   const [orders, setOrders] = React.useState<ProductsInShipmentOrdersEntity[]>(
@@ -230,6 +240,18 @@ export default function App() {
   );
   const [hasScanned, setHasScanned] = React.useState(false);
   const [readings, setReadings] = React.useState<String[]>([]);
+
+  const totalOrderUnits = React.useMemo(
+    () =>
+      orders.reduce((accumulator, currentValue) => {
+        return accumulator + currentValue.units;
+      }, 0),
+    [orders]
+  );
+  const readAll = React.useMemo(
+    () => readings.length == totalOrderUnits,
+    [readings, totalOrderUnits]
+  );
 
   React.useEffect(() => {
     fetch(process.env.EXPO_PUBLIC_API_URL + "/shipmentOrders/2")
@@ -259,25 +281,51 @@ export default function App() {
   }
 
   const handleBarCodeScanned = (props: { type: any; data: any }) => {
-    const ian = JSON.parse(props.data).ian;
-    var order = orders.find((i) => i.products?.ian == ian);
+    let ean = "";
+    switch (props.type) {
+      case "qr":
+        ean = JSON.parse(props.data).ean;
+        break;
+      case 32:
+        ean = props.data.slice(0,props.data.length-1);
+        break;
+    }
+
+    if(ean == ""){
+      Toast.show({
+        type: "error",
+        text1: "Falha ao de leitura",
+        visibilityTime: 1750,
+      });
+      return
+    }
+
+    var order = orders.find((i) => i.products?.ean == ean);
+
+    if(order == null){
+      Toast.show({
+        type: "error",
+        text1: "Artigo nao esta no pedido",
+        visibilityTime: 1750,
+      });
+    }
     setHasScanned(true);
 
     if (
       order?.units &&
-      readings.filter((i) => i == ian).length >= order?.units
+      readings.filter((i) => i == ean).length >= order?.units
     ) {
       Toast.show({
         type: "error",
-        text1: "Todos produtos ja foram lidos",
-        visibilityTime: 2500,
+        text1: "Todos artigos ja foram lidos",
+        visibilityTime: 1750,
       });
     } else {
-      setReadings((readings) => [...readings, ian]);
+      setReadings((readings) => [...readings, ean]);
       Toast.show({
         type: "success",
         text1: "Leitura Realizada com Sucesso",
-        visibilityTime: 2500,
+        visibilityTime: 1750,
       });
     }
 
@@ -286,19 +334,11 @@ export default function App() {
     }, 1500);
   };
 
-  // interface Order {
-  //   name: string;
-  //   date: number;
-  //   ian: string;
-  //   units: string;
-  //   isBox: Boolean;
-  // }
-
   return (
     <View style={styles.container}>
       <CameraView
         style={styles.camera}
-        barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+        barcodeScannerSettings={{ barcodeTypes: ["qr","ean13"] }}
         onBarcodeScanned={hasScanned ? undefined : handleBarCodeScanned}
       >
         <Text></Text>
@@ -315,6 +355,7 @@ export default function App() {
           />
         </View>
         <List orders={orders} readings={readings} />
+        <ShowCompleteButton show={readAll}/>
       </View>
     </View>
   );

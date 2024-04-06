@@ -36,20 +36,17 @@ async function addProductsInShipmentOrders(productsInShipmentOrder: NewProductsI
 
 const productList = [{
 	name: 'PenDrive',
-	ian: '1',
-	sku: "pd",
+	ean: '100000000000',
 	isTransportationBox: false
 },
 {
 	name: 'Cartão Presente',
-	ian: '2',
-	sku: "cp",
+	ean: '200000000000',
 	isTransportationBox: false
 },
 {
 	name: 'Caixa 1',
-	ian: '3',
-	sku: "c",
+	ean: '300000000000',
 	isTransportationBox: true
 }];
 const addedProductList = [];

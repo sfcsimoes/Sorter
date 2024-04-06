@@ -4,8 +4,7 @@ import { sql, relations } from 'drizzle-orm';
 export const products = sqliteTable('products', {
 	id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
 	name: text('name'),
-	sku: text('sku'),
-	ian: text('ian'),
+	ean: text('ean'),
 	isTransportationBox: integer('isTransportationBox', { mode: 'boolean' }),
 	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),

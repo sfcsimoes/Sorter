@@ -1,14 +1,17 @@
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import Database from 'better-sqlite3';
 import {
+	users,
 	products,
-	stores,
+	warehouses,
 	shipmentOrders,
 	productsInShipmentOrders,
+	type User,
+	type NewUser,
 	type Product,
 	type NewProduct,
-	type Store,
-	type NewStore,
+	type Warehouse,
+	type NewWarehouse,
 	type ShipmentOrder,
 	type NewShipmentOrder,
 	type ProductsInShipmentOrders,
@@ -18,6 +21,10 @@ import {
 const sqlite = new Database('./db/demo.db');
 const db = drizzle(sqlite);
 
+async function addUser(user: NewUser): Promise<User> {
+	return (await db.insert(users).values(user).returning()).at(0)!;
+}
+
 async function addProduct(product: NewProduct): Promise<Product> {
 	return (await db.insert(products).values(product).returning()).at(0)!;
 }
@@ -26,13 +33,15 @@ async function addShipmentOrders(shipmentOrder: NewShipmentOrder): Promise<Shipm
 	return (await db.insert(shipmentOrders).values(shipmentOrder).returning()).at(0)!;
 }
 
-async function addStore(store: NewStore): Promise<Store> {
-	return (await db.insert(stores).values(store).returning()).at(0)!;
+async function addWarehouse(warehouse: NewWarehouse): Promise<Warehouse> {
+	return (await db.insert(warehouses).values(warehouse).returning()).at(0)!;
 }
 
 async function addProductsInShipmentOrders(productsInShipmentOrder: NewProductsInShipmentOrders): Promise<ProductsInShipmentOrders> {
 	return (await db.insert(productsInShipmentOrders).values(productsInShipmentOrder).returning()).at(0)!;
 }
+
+const user = addUser({ name: 'Jane Developer', email: 'teste@email.com', password: '123456789' });
 
 const productList = [{
 	name: 'PenDrive',
@@ -49,61 +58,24 @@ const productList = [{
 	ean: '300000000000',
 	isTransportationBox: true
 }];
-const addedProductList = [];
+
 productList.forEach(product => {
-	addedProductList.push(addProduct(product));
+	addProduct(product);
 });
 
-const storeList = [{
+const warehouseList = [{
 	name: 'Coimbra',
 },
 {
 	name: 'Lisboa',
 }];
-const addedStoreList = [];
-storeList.forEach(store => {
-	addedStoreList.push(addStore(store));
+warehouseList.forEach(store => {
+	addWarehouse(store);
 });
 
-const addedShipmentOrdersList = [];
-addedShipmentOrdersList.push(addShipmentOrders({ status: 'Pendente', store: 1 }));
-addedShipmentOrdersList.push(addShipmentOrders({ status: 'Pendente', store: 2 }));
+addShipmentOrders({ status: 'Pendente', originId: 1, destinationId: 2 });
+addShipmentOrders({ status: 'Pendente', originId: 2, destinationId: 1 });
 
+addProductsInShipmentOrders({ shipmentOrder: 2, product: 1, units: 2, isInTransportationBox: false });
+addProductsInShipmentOrders({ shipmentOrder: 2, product: 2, units: 2, isInTransportationBox: false });
 
-const addedShipmentOrderWithTransportationBoxes = [];
-addedShipmentOrderWithTransportationBoxes.push(addProductsInShipmentOrders({ shipmentOrder: 2, product: 1, units: 2, isInTransportationBox: false }));
-addedShipmentOrderWithTransportationBoxes.push(addProductsInShipmentOrders({ shipmentOrder: 2, product: 2, units: 2, isInTransportationBox: false }));
-
-
-
-// async function addUser(user: NewUser): Promise<User> {
-// 	return (await db.insert(users).values(user).returning()).at(0)!;
-// }
-
-// async function addIdea(idea: NewIdea) {
-// 	await db.insert(ideas).values(idea);
-// }
-
-// async function getIdeas() {
-// 	return await db
-// 		.select({
-// 			id: ideas.id,
-// 			text: ideas.text,
-// 			status: ideas.status,
-// 			creator: users.name,
-// 		})
-// 		.from(ideas)
-// 		.leftJoin(users, eq(ideas.creator, users.id));
-// }
-
-// const user = await addUser({ name: 'Jane Developer' });
-
-// await addIdea({
-// 	text: 'Learn how ORMs work',
-// 	status: 'pending',
-// 	creator: user.id,
-// });
-
-// const allIdeas = await getIdeas();
-
-// console.log(allIdeas);

@@ -13,7 +13,7 @@ const app = express()
 app.use(express.json())
 
 
-app.get('/stores', async (req, res) => {
+app.get('/products', async (req, res) => {
   const users = await db.query.products.findMany();
   res.json(users)
 })

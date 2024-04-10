@@ -1,6 +1,31 @@
 import {  integer, text, sqliteTable, primaryKey } from 'drizzle-orm/sqlite-core';
 import { sql, relations } from 'drizzle-orm';
 
+export const users = sqliteTable('users', {
+	id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+	name: text('name'),
+	email: text('email'),
+	password: text('password'),
+	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
+	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
+});
+
+export const usersRelations = relations(users, ({ many }) => ({
+	productsInShipmentOrders: many(shipmentOrders),
+}));
+
+export const warehouses = sqliteTable('warehouses', {
+	id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+	name: text('name'),
+	address: text('address'),
+	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
+	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
+});
+
+export const warehousesRelations = relations(warehouses, ({ many }) => ({
+	shipmentOrders: many(shipmentOrders),
+}));
+
 export const products = sqliteTable('products', {
 	id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
 	name: text('name'),
@@ -14,41 +39,10 @@ export const productsRelations = relations(products, ({ many }) => ({
 	productsInShipmentOrders: many(productsInShipmentOrders),
 }));
 
-export const warehouses = sqliteTable('warehouses', {
-	id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
-	name: text('name'),
-	adress: text('adress'),
-	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
-	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
-});
-
-export const warehousesRelations = relations(warehouses, ({ many }) => ({
-	shipmentOrders: many(shipmentOrders),
-}));
-
-export const sorterEntryPoints = sqliteTable('sorterEntryPoints', {
-	id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
-	name: text('name'),
-	active: integer('active', { mode: 'boolean' }),
-	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
-	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
-});
-
-export const stores = sqliteTable('stores', {
-	id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
-	name: text('name'),
-	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
-	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
-});
-
-export const storesRelations = relations(stores, ({ many }) => ({
-	shipmentOrders: many(shipmentOrders),
-}));
-
 export const shipmentOrders = sqliteTable('shipmentOrders', {
 	id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
-	warehouse: integer('warehouseId').references(() => warehouses.id),
-	store: integer('storeId').references(() => stores.id),
+	originId: integer('originId').references(() => warehouses.id),
+	destinationId: integer('destinationId').references(() => warehouses.id),
 	status: text('status', { enum: ['Concluida', 'Cancelada', 'Pendente'] }),
 	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
@@ -62,6 +56,7 @@ export const productsInShipmentOrders = sqliteTable('productsInShipmentOrders', 
 	product: integer('productId').references(() => products.id),
 	shipmentOrder: integer('shipmentOrderId').references(() => shipmentOrders.id),
 	units: integer('units'),
+	fulfilledBy: integer('fulfilledBy').references(() => users.id),
 	isInTransportationBox: integer('isInTransportationBox', { mode: 'boolean' }),
 	transportationBox: integer('transportationBoxId').references(() => products.id),
 }, (t) => ({
@@ -79,11 +74,11 @@ export const productsInShipmentOrdersRelations = relations(productsInShipmentOrd
 	}),
 }));
 
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
-
-export type Store = typeof stores.$inferSelect;
-export type NewStore = typeof stores.$inferInsert;
 
 export type Warehouse = typeof warehouses.$inferSelect;
 export type NewWarehouse= typeof warehouses.$inferInsert;

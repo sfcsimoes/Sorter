@@ -9,9 +9,7 @@ cd server
 npm i
 
 # initialize the database
-npm run db:generate
-npm run db:push
-npm run db:seed
+npm run db:start
 
 # start the dev server
 npm run dev

@@ -341,6 +341,7 @@ export default function App() {
         barcodeScannerSettings={{ barcodeTypes: ["qr","ean13"] }}
         onBarcodeScanned={hasScanned ? undefined : handleBarCodeScanned}
       >
+      <View style={styles.target} />
         <Text></Text>
       </CameraView>
       <View style={styles.container}>
@@ -393,4 +394,20 @@ const styles = StyleSheet.create({
     height: 1,
     width: "95%",
   },
+  target: {
+    position: 'absolute', // Posicionamento absoluto para que possa ser colocado sobre a câmera
+    width: 250, // Largura do retângulo
+    height: 100, // Altura do retângulo
+    borderWidth: 2, // Largura da borda do retângulo
+    borderColor: 'red', // Cor da borda vermelha
+    borderRadius: 10, // Raio das bordas do retângulo
+    backgroundColor: 'rgba(0,0,0,0)', // Cor de fundo transparente
+    top: '50%', // Posiciona o retângulo verticalmente no centro
+    left: '70%', // Posiciona o retângulo horizontalmente no centro
+    marginLeft: -200, // Ajuste para posicionar o retângulo corretamente no centro
+    marginTop: -50, // Ajuste para posicionar o retângulo corretamente no centro
+  },
+
 });
+
+

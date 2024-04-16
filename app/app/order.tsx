@@ -1,6 +1,6 @@
 import { CameraView, useCameraPermissions } from "expo-camera/next";
 import { useState } from "react";
-import { StyleSheet, Pressable } from "react-native";
+import { StyleSheet, Pressable, Alert } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { Text, View, Button } from "@/components/Themed";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -9,6 +9,11 @@ import Colors from "@/constants/Colors";
 import React from "react";
 import Toast from "react-native-toast-message";
 import StyledButton from "@/components/StyledButtont";
+import { useNavigation } from '@react-navigation/native';
+import { Link, Stack } from "expo-router";
+import ModalScreen from "./modal";
+import { Index } from "drizzle-orm/pg-core";
+
 
 export interface Weather {
   id: number;
@@ -222,15 +227,23 @@ function List(props: {
   );
 }
 
+
+
 function ShowCompleteButton(props: {
-  show: Boolean;
+  show: boolean;
+  onPress?: () => void; // Removido o requerimento para onPress
 }) {
-  if(props.show){
+  const { show, onPress } = props; // Desestruture a props para acessar show e onPress
+
+  if (show) {
     return (
-      <StyledButton onPress={undefined} title="Finalizar" variant="default" />
+      <Link href="./" asChild>
+        <StyledButton title="Finalizar" variant="default" onPress={onPress} />
+      </Link>
     );
+  } else {
+    return null;
   }
-  
 }
 
 export default function App() {

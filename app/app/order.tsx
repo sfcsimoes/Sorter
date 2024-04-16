@@ -68,7 +68,7 @@ function List(props: {
               onPress={undefined}
               title={undefined}
               variant="default"
-              icon={<FontAwesome name="pencil" size={20} />}
+              icon={<FontAwesome name="minus" size={20} />}
             />
           </View>
           <View style={{ marginLeft: 8 }}>

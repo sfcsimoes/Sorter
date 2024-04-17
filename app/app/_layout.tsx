@@ -102,5 +102,5 @@ function RootLayoutNav() {
         <Toast config={toastConfig} />
       </RootSiblingParent>
     </ThemeProvider>
-  );
+  ); // strack its the react native navigation, we can define wich screen is visible, in this case we show modal and hide tabs
 }

@@ -38,7 +38,7 @@ export interface Products {
   isTransportationBox: boolean;
   createdAt: string;
   updatedAt: string;
-}
+} // defines the data struture we will use in the program
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>["name"];
@@ -231,9 +231,9 @@ function List(props: {
 
 function ShowCompleteButton(props: {
   show: boolean;
-  onPress?: () => void; // Removido o requerimento para onPress
+  onPress?: () => void; // Remove requirement for onpress
 }) {
-  const { show, onPress } = props; // Desestruture a props para acessar show e onPress
+  const { show, onPress } = props; // make props to acess show and onpress
 
   if (show) {
     return (
@@ -248,30 +248,30 @@ function ShowCompleteButton(props: {
 
 export default function App() {
   const [permission, requestPermission] = useCameraPermissions();
-  const [orders, setOrders] = React.useState<ProductsInShipmentOrdersEntity[]>(
+  const [orders, setOrders] = React.useState<ProductsInShipmentOrdersEntity[]>( //gets the array of order's to use 
     []
   );
-  const [hasScanned, setHasScanned] = React.useState(false);
-  const [readings, setReadings] = React.useState<String[]>([]);
+  const [hasScanned, setHasScanned] = React.useState(false); // control var to know if the user has scanned
+  const [readings, setReadings] = React.useState<String[]>([]); // string with the value we read with the cam
 
   const totalOrderUnits = React.useMemo(
     () =>
-      orders.reduce((accumulator, currentValue) => {
+      orders.reduce((accumulator, currentValue) => { // has the number of order's, when the total of orders change we use it to control/acess
         return accumulator + currentValue.units;
       }, 0),
     [orders]
   );
   const readAll = React.useMemo(
-    () => readings.length == totalOrderUnits,
+    () => readings.length == totalOrderUnits, // verify if the readings size match the totlorderunits to control when the order is completed
     [readings, totalOrderUnits]
   );
 
   React.useEffect(() => {
-    fetch(process.env.EXPO_PUBLIC_API_URL + "/shipmentOrders/2")
-      .then((resp) => resp.json())
-      .then((json) => setOrders(json.productsInShipmentOrders))
+    fetch(process.env.EXPO_PUBLIC_API_URL + "/shipmentOrders/2") //HTTP request to te data server
+      .then((resp) => resp.json()) // data extraction - if the function returns a promise data that solves the response with .then callback extracts the json content
+      .then((json) => setOrders(json.productsInShipmentOrders)) // receive the parsed data and update the variable orders
       .catch((error) => console.error(error));
-    // .finally(() => setLoading(false));
+    
   });
 
   if (!permission) {
@@ -326,7 +326,7 @@ export default function App() {
 
     if (
       order?.units &&
-      readings.filter((i) => i == ean).length >= order?.units
+      readings.filter((i) => i == ean).length >= order?.units 
     ) {
       Toast.show({
         type: "error",
@@ -408,17 +408,17 @@ const styles = StyleSheet.create({
     width: "95%",
   },
   target: {
-    position: 'absolute', // Posicionamento absoluto para que possa ser colocado sobre a câmera
-    width: 250, // Largura do retângulo
-    height: 100, // Altura do retângulo
-    borderWidth: 2, // Largura da borda do retângulo
-    borderColor: 'red', // Cor da borda vermelha
-    borderRadius: 10, // Raio das bordas do retângulo
-    backgroundColor: 'rgba(0,0,0,0)', // Cor de fundo transparente
-    top: '50%', // Posiciona o retângulo verticalmente no centro
-    left: '70%', // Posiciona o retângulo horizontalmente no centro
-    marginLeft: -200, // Ajuste para posicionar o retângulo corretamente no centro
-    marginTop: -50, // Ajuste para posicionar o retângulo corretamente no centro
+    position: 'absolute', 
+    width: 250, 
+    height: 100, 
+    borderWidth: 2, 
+    borderColor: 'red', 
+    borderRadius: 10, 
+    backgroundColor: 'rgba(0,0,0,0)', 
+    top: '50%', 
+    left: '70%', 
+    marginLeft: -200, 
+    marginTop: -50, 
   },
 
 });

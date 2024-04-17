@@ -13,7 +13,7 @@ export default function TabOneScreen() {
     updatedAt: String;
     status: String;
   }
-  const [text, onChangeText] = React.useState("Useless Text");
+  const [text, onChangeText] = React.useState("Pesquisar encomenda aqui...");
   const [number, onChangeNumber] = React.useState("");
   const [orders, setOrders] = React.useState<Order[]>([]);
 
@@ -26,7 +26,7 @@ export default function TabOneScreen() {
   });
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tab One t</Text>
+      <Text style={styles.title}>Encomendas Pendentes</Text>
       <TextInput
         style={styles.input}
         onChangeText={onChangeText}

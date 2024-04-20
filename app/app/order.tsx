@@ -5,7 +5,6 @@ import { FlashList } from "@shopify/flash-list";
 import { Text, View, Button } from "@/components/Themed";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useColorScheme } from "@/components/useColorScheme";
-import Colors from "@/constants/Colors";
 import React from "react";
 import Toast from "react-native-toast-message";
 import StyledButton from "@/components/StyledButtont";
@@ -33,13 +32,6 @@ export interface Products {
   isTransportationBox: boolean;
   createdAt: string;
   updatedAt: string;
-}
-
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>["name"];
-  color: string;
-}) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
 }
 
 function List(props: {
@@ -222,22 +214,20 @@ function List(props: {
   );
 }
 
-function ShowCompleteButton(props: {
-  show: Boolean;
-}) {
-  if(props.show){
-    return (
-      <StyledButton onPress={undefined} title="Finalizar" variant="default" />
-    );
+function test() {
+  // return '';
+  console.log("teste");
+}
+
+function ShowCompleteButton(props: { show: Boolean }) {
+  if (props.show) {
+    return <StyledButton onPress={test} title="Finalizar" variant="default" />;
   }
-  
 }
 
 export default function App() {
   const [permission, requestPermission] = useCameraPermissions();
-  const [orders, setOrders] = React.useState<ProductsInShipmentOrdersEntity[]>(
-    []
-  );
+  const [orders, setOrders] = React.useState<ProductsInShipmentOrdersEntity[]>([]);
   const [hasScanned, setHasScanned] = React.useState(false);
   const [readings, setReadings] = React.useState<String[]>([]);
 
@@ -254,7 +244,7 @@ export default function App() {
   );
 
   React.useEffect(() => {
-    fetch(process.env.EXPO_PUBLIC_API_URL + "/shipmentOrders/2")
+    fetch(process.env.EXPO_PUBLIC_API_URL + "/shipmentOrder/2")
       .then((resp) => resp.json())
       .then((json) => setOrders(json.productsInShipmentOrders))
       .catch((error) => console.error(error));
@@ -283,31 +273,32 @@ export default function App() {
   const handleBarCodeScanned = (props: { type: any; data: any }) => {
     let ean = "";
     switch (props.type) {
-      case "qr":
+      case 256:
         ean = JSON.parse(props.data).ean;
         break;
       case 32:
-        ean = props.data.slice(0,props.data.length-1);
+        ean = props.data.slice(0, props.data.length - 1);
         break;
     }
 
-    if(ean == ""){
+    if (ean == "") {
       Toast.show({
         type: "error",
         text1: "Falha ao de leitura",
         visibilityTime: 1750,
       });
-      return
+      return;
     }
 
     var order = orders.find((i) => i.products?.ean == ean);
 
-    if(order == null){
+    if (order == null || order == undefined) {
       Toast.show({
         type: "error",
         text1: "Artigo nao esta no pedido",
         visibilityTime: 1750,
       });
+      return;
     }
     setHasScanned(true);
 
@@ -334,11 +325,15 @@ export default function App() {
     }, 1500);
   };
 
+  const removeItem  = (props: { type: any; data: any }) => {
+    
+  }
+
   return (
     <View style={styles.container}>
       <CameraView
         style={styles.camera}
-        barcodeScannerSettings={{ barcodeTypes: ["qr","ean13"] }}
+        barcodeScannerSettings={{ barcodeTypes: ["qr", "ean13"] }}
         onBarcodeScanned={hasScanned ? undefined : handleBarCodeScanned}
       >
         <Text></Text>
@@ -355,7 +350,7 @@ export default function App() {
           />
         </View>
         <List orders={orders} readings={readings} />
-        <ShowCompleteButton show={readAll}/>
+        <ShowCompleteButton show={readAll} />
       </View>
     </View>
   );

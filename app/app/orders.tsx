@@ -5,6 +5,10 @@ import EditScreenInfo from "@/components/EditScreenInfo";
 import { Text, View, TextInput } from "@/components/Themed";
 import { FlashList } from "@shopify/flash-list";
 import { Link } from "expo-router";
+import { Stack } from "expo-router";
+import { useNavigation, useRouter, useLocalSearchParams } from "expo-router";
+import { DatabaseHelper } from "@/db/database";
+import * as schema from "@/db/schema";
 
 export default function TabOneScreen() {
   interface Order {
@@ -16,16 +20,31 @@ export default function TabOneScreen() {
   const [text, onChangeText] = React.useState("Useless Text");
   const [number, onChangeNumber] = React.useState("");
   const [orders, setOrders] = React.useState<Order[]>([]);
+  const [warehouse, setWarehouse] = React.useState<schema.Warehouse>();
+  const navigation = useNavigation();
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const { id } = params;
 
   React.useEffect(() => {
-      fetch(process.env.EXPO_PUBLIC_API_URL + "/shipmentOrders")
-        .then((resp) => resp.json())
-        .then((json) => setOrders(json))
-        .catch((error) => console.error(error));
-        // .finally(() => setLoading(false));
-  });
+    async function setup() {
+      var db = new DatabaseHelper();
+      setWarehouse(await db.getWarehouse(parseInt(id.toString())));
+      // db.syncShipmentOrders(parseInt(id.toString(), 10));
+      const result = await db.getShipmentOrders(parseInt(id.toString(), 10));
+
+      setOrders(result);
+    }
+    setup();
+  }, []);
+
   return (
     <View style={styles.container}>
+      <Stack.Screen
+        options={{
+          title: warehouse?.name || "s",
+        }}
+      />
       <Text style={styles.title}>Tab One t</Text>
       <TextInput
         style={styles.input}

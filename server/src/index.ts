@@ -13,6 +13,11 @@ const app = express()
 app.use(express.json())
 
 
+app.get('/warehouses', async (req, res) => {
+  const users = await db.query.warehouses.findMany();
+  res.json(users)
+})
+
 app.get('/products', async (req, res) => {
   const users = await db.query.products.findMany();
   res.json(users)
@@ -39,6 +44,22 @@ app.get('/shipmentOrders', async (req, res) => {
 })
 
 app.get('/shipmentOrders/:id', async (req, res) => {
+  const { id } = req.params;
+  const shipmentOrders = await db.query.shipmentOrders.findMany(
+    {
+      where: (shipmentOrders, { eq }) => eq(shipmentOrders.originId, parseFloat(id)),
+      with: {
+        productsInShipmentOrders: {
+          with: {
+            products: true
+          },
+        },
+      },
+    });
+  res.json(shipmentOrders)
+})
+
+app.get('/shipmentOrder/:id', async (req, res) => {
   const { id } = req.params;
 
   const shipmentOrders = await db.query.shipmentOrders.findFirst(

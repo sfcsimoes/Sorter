@@ -64,11 +64,18 @@ productList.forEach(product => {
 });
 
 const warehouseList = [{
-	name: 'Coimbra',
+	name: 'Worten Eiras (Outlet)',
+	address: 'Estrada da Ribeira de Eiras - Coimbra Retail Park Loja 4 e 5 3020-497'
 },
 {
-	name: 'Lisboa',
+	name: 'Entreposto Logístico - Azambuja',
+	address: 'Edifício Plaza II, EN 3, Km 7 – Arneiro, 2050-306 Azambuja'
+},
+{
+	name: 'Worten Via Catarina',
+	address: 'Shopping Via Catarina - Loja 1.20, Rua Santa Catarina 312 4000-433'
 }];
+
 warehouseList.forEach(store => {
 	addWarehouse(store);
 });

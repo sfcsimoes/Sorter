@@ -1,6 +1,6 @@
 import { CameraView, useCameraPermissions } from "expo-camera/next";
 import { useState } from "react";
-import { StyleSheet, Pressable, Alert } from "react-native";
+import { StyleSheet, Pressable } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { Text, View, Button } from "@/components/Themed";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -8,11 +8,6 @@ import { useColorScheme } from "@/components/useColorScheme";
 import React from "react";
 import Toast from "react-native-toast-message";
 import StyledButton from "@/components/StyledButtont";
-import { useNavigation } from '@react-navigation/native';
-import { Link, Stack } from "expo-router";
-import ModalScreen from "./modal";
-import { Index } from "drizzle-orm/pg-core";
-
 
 export interface Weather {
   id: number;
@@ -65,7 +60,7 @@ function List(props: {
               onPress={undefined}
               title={undefined}
               variant="default"
-              icon={<FontAwesome name="minus" size={20} />}
+              icon={<FontAwesome name="pencil" size={20} />}
             />
           </View>
           <View style={{ marginLeft: 8 }}>
@@ -219,8 +214,6 @@ function List(props: {
   );
 }
 
-
-
 function test() {
   // return '';
   console.log("teste");
@@ -240,13 +233,13 @@ export default function App() {
 
   const totalOrderUnits = React.useMemo(
     () =>
-      orders.reduce((accumulator, currentValue) => { // has the number of order's, when the total of orders change we use it to control/acess
+      orders.reduce((accumulator, currentValue) => {
         return accumulator + currentValue.units;
       }, 0),
     [orders]
   );
   const readAll = React.useMemo(
-    () => readings.length == totalOrderUnits, // verify if the readings size match the totlorderunits to control when the order is completed
+    () => readings.length == totalOrderUnits,
     [readings, totalOrderUnits]
   );
 
@@ -255,7 +248,7 @@ export default function App() {
       .then((resp) => resp.json())
       .then((json) => setOrders(json.productsInShipmentOrders))
       .catch((error) => console.error(error));
-    
+    // .finally(() => setLoading(false));
   });
 
   if (!permission) {
@@ -311,7 +304,7 @@ export default function App() {
 
     if (
       order?.units &&
-      readings.filter((i) => i == ean).length >= order?.units 
+      readings.filter((i) => i == ean).length >= order?.units
     ) {
       Toast.show({
         type: "error",
@@ -343,7 +336,6 @@ export default function App() {
         barcodeScannerSettings={{ barcodeTypes: ["qr", "ean13"] }}
         onBarcodeScanned={hasScanned ? undefined : handleBarCodeScanned}
       >
-      <View style={styles.target} />
         <Text></Text>
       </CameraView>
       <View style={styles.container}>
@@ -396,20 +388,4 @@ const styles = StyleSheet.create({
     height: 1,
     width: "95%",
   },
-  target: {
-    position: 'absolute', 
-    width: 250, 
-    height: 100, 
-    borderWidth: 2, 
-    borderColor: 'red', 
-    borderRadius: 10, 
-    backgroundColor: 'rgba(0,0,0,0)', 
-    top: '50%', 
-    left: '70%', 
-    marginLeft: -200, 
-    marginTop: -50, 
-  },
-
 });
-
-

@@ -1,37 +1,99 @@
 import { CameraView, useCameraPermissions } from "expo-camera/next";
 import { useState } from "react";
-import { StyleSheet, Pressable } from "react-native";
+import { StyleSheet, Pressable, Button } from "react-native";
 import { FlashList } from "@shopify/flash-list";
-import { Text, View, Button } from "@/components/Themed";
+import { Text, View } from "@/components/Themed";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useColorScheme } from "@/components/useColorScheme";
 import React from "react";
 import Toast from "react-native-toast-message";
 import StyledButton from "@/components/StyledButtont";
+import { AuxParameters, ProductsInShipmentOrdersEntity } from "@/types/types";
+import { Stack, useRouter, useLocalSearchParams } from "expo-router";
+import { atom, useAtom } from "jotai";
 
-export interface Weather {
-  id: number;
-  store: number;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-  productsInShipmentOrders?: ProductsInShipmentOrdersEntity[] | null;
-}
-export interface ProductsInShipmentOrdersEntity {
-  products?: Products | null;
-  shipmentOrder: number;
-  units: number;
-  isInTransportationBox: boolean;
-  transportationBox?: boolean | null | undefined;
-  product?: number | null;
-}
-export interface Products {
-  id: number;
-  name: string;
-  ean: string;
-  isTransportationBox: boolean;
-  createdAt: string;
-  updatedAt: string;
+const ordersAtom = atom<ProductsInShipmentOrdersEntity[]>([]);
+const readingsAtom = atom<string[]>([]);
+
+function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
+  const [readings, setReadings] = useAtom(readingsAtom);
+  const [orders, setOrders] = useAtom(ordersAtom);
+  let product = orders.find((i) => i.products?.ean == item.products?.ean);
+
+  if (!isBox) {
+    return (
+      <>
+        <View>
+          <StyledButton
+            onPress={() => {
+              var index = readings.findIndex((i) => i == item.products?.ean);
+              if (index > -1) {
+                var copy = [...readings];
+                copy.splice(index, 1);
+                setReadings([...copy]);
+              }
+            }}
+            title={undefined}
+            variant="default"
+            icon={<FontAwesome name="minus" size={18} />}
+          />
+        </View>
+
+        <View style={{ marginLeft: 8 }}>
+          <StyledButton
+            onPress={() => {
+              if (
+                item?.units &&
+                readings.filter((i) => i == item.products?.ean).length >=
+                  item?.units
+              ) {
+                Toast.show({
+                  type: "error",
+                  text1: "Todos artigos ja foram lidos",
+                  visibilityTime: 1750,
+                });
+              } else {
+                if (item.products?.ean) {
+                  setReadings([...readings, item.products?.ean]);
+                  // Toast.show({
+                  //   type: "success",
+                  //   text1: "Produto Adicionado",
+                  //   visibilityTime: 1000,
+                  // });
+                }
+              }
+            }}
+            title={undefined}
+            variant="default"
+            icon={<FontAwesome name="plus" size={18} />}
+          />
+        </View>
+      </>
+    );
+  }
+  if (showItems) {
+    return (
+      <>
+        <StyledButton
+          onPress={handleClick}
+          title={undefined}
+          variant="default"
+          icon={<FontAwesome name="chevron-down" size={20} />}
+        />
+      </>
+    );
+  } else {
+    return (
+      <>
+        <StyledButton
+          onPress={handleClick}
+          title={undefined}
+          variant="default"
+          icon={<FontAwesome name="chevron-up" size={20} />}
+        />
+      </>
+    );
+  }
 }
 
 function List(props: {
@@ -40,63 +102,10 @@ function List(props: {
 }) {
   const [showItems, setShowItems] = useState(false);
   const colorScheme = useColorScheme();
+  const [readings, setReadings] = useAtom(readingsAtom);
 
   function handleClick() {
     setShowItems(!showItems);
-  }
-
-  type AuxParameters = {
-    isBox: boolean | null | undefined;
-    showItems: boolean;
-    handleClick: any;
-  };
-
-  function Aux({ isBox, showItems, handleClick }: AuxParameters) {
-    if (!isBox) {
-      return (
-        <>
-          <View>
-            <StyledButton
-              onPress={undefined}
-              title={undefined}
-              variant="default"
-              icon={<FontAwesome name="pencil" size={20} />}
-            />
-          </View>
-          <View style={{ marginLeft: 8 }}>
-            <StyledButton
-              onPress={undefined}
-              title={undefined}
-              variant="default"
-              icon={<FontAwesome name="plus" size={20} />}
-            />
-          </View>
-        </>
-      );
-    }
-    if (showItems) {
-      return (
-        <>
-          <StyledButton
-            onPress={handleClick}
-            title={undefined}
-            variant="default"
-            icon={<FontAwesome name="chevron-down" size={20} />}
-          />
-        </>
-      );
-    } else {
-      return (
-        <>
-          <StyledButton
-            onPress={handleClick}
-            title={undefined}
-            variant="default"
-            icon={<FontAwesome name="chevron-up" size={20} />}
-          />
-        </>
-      );
-    }
   }
 
   return (
@@ -115,7 +124,44 @@ function List(props: {
                 }}
               >
                 <View style={{ marginLeft: 2, flex: 4 }}>
-                  <Text style={styles.title}>{item.products?.name}</Text>
+                  {item.isInTransportationBox ? (
+                    <View>
+                      <Text style={styles.title}>
+                        {item.transportationBox?.name}
+                      </Text>
+                      <Text style={styles.subTitle}>
+                        EAN: {item.transportationBox?.ean}
+                      </Text>
+                      {/* <Text style={styles.subTitle}>
+                        Quantidade:{" "}
+                        {
+                          props.readings.filter((i) => i == item.products?.ean)
+                            .length
+                        }{" "}
+                        / {item.units}
+                      </Text>
+                      <Text style={styles.subTitle}>
+                        EAN: {item.products?.ean}
+                      </Text> */}
+                    </View>
+                  ) : (
+                    <View>
+                      <Text style={styles.title}>{item.products?.name}</Text>
+                      <Text style={styles.subTitle}>
+                        Quantidade:{" "}
+                        {
+                          props.readings.filter((i) => i == item.products?.ean)
+                            .length
+                        }{" "}
+                        / {item.units}
+                      </Text>
+                      <Text style={styles.subTitle}>
+                        EAN: {item.products?.ean}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* <Text style={styles.title}>{item.products?.name}</Text>
                   <Text style={styles.subTitle}>
                     Quantidade:{" "}
                     {
@@ -124,13 +170,15 @@ function List(props: {
                     }{" "}
                     / {item.units}
                   </Text>
-                  <Text style={styles.subTitle}>EAN: {item.products?.ean}</Text>
+                  <Text style={styles.subTitle}>EAN: {item.products?.ean}</Text> */}
                 </View>
+
                 <View style={{ marginLeft: 2, flex: 2, flexDirection: "row" }}>
-                  <Aux
-                    isBox={item.transportationBox}
+                  <Options
+                    isBox={item.isInTransportationBox}
                     showItems={showItems}
                     handleClick={handleClick}
+                    item={item}
                   />
                 </View>
               </View>
@@ -140,11 +188,11 @@ function List(props: {
                 darkColor="rgba(255,255,255,0.15)"
               />
 
-              {/* {showItems ? (
+              {showItems && item.isInTransportationBox ? (
                 <>
                   <FlashList
                     nestedScrollEnabled={true}
-                    data={item.items}
+                    data={[item.products]}
                     renderItem={({ item, index }) => {
                       return (
                         <>
@@ -155,38 +203,28 @@ function List(props: {
                               marginTop: 2,
                               marginLeft: 18,
                             }}
-                            // className="flex-row items-center mt-2 ms-6"
                           >
-                            <View
-                              //   className="ms-1"
-                              style={{ marginLeft: 2, flex: 4 }}
-                            >
+                            <View style={{ marginLeft: 2, flex: 4 }}>
                               <Text style={styles.title}>{item.name}</Text>
-                              <Text
-                                style={styles.subTitle}
-                                // className="text-muted-foreground"
-                              >
+                              <Text style={styles.subTitle}>
                                 Quantidade: {item.units}
                               </Text>
-                              <Text
-                                style={styles.subTitle}
-                                // className="text-muted-foreground"
-                              >
+                              <Text style={styles.subTitle}>
                                 EAN: {item.ian}
                               </Text>
                             </View>
                             <View
-                              //   className="ms-auto flex-row"
                               style={{
                                 marginLeft: 2,
                                 flex: 2,
                                 flexDirection: "row",
                               }}
                             >
-                              <Aux
+                              <Options
                                 isBox={false}
                                 showItems={showItems}
                                 handleClick={handleClick}
+                                item={item}
                               />
                             </View>
                           </View>
@@ -204,7 +242,7 @@ function List(props: {
                 </>
               ) : (
                 <View></View>
-              )} */}
+              )}
             </>
           );
         }}
@@ -226,10 +264,18 @@ function ShowCompleteButton(props: { show: Boolean }) {
 }
 
 export default function App() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const { id } = params;
   const [permission, requestPermission] = useCameraPermissions();
-  const [orders, setOrders] = React.useState<ProductsInShipmentOrdersEntity[]>([]);
   const [hasScanned, setHasScanned] = React.useState(false);
-  const [readings, setReadings] = React.useState<String[]>([]);
+  // const [orders, setOrders] = React.useState<ProductsInShipmentOrdersEntity[]>(
+  //   []
+  // );
+
+  // const [readings, setReadings] = React.useState<String[]>([]);
+  const [orders, setOrders] = useAtom(ordersAtom);
+  const [readings, setReadings] = useAtom(readingsAtom);
 
   const totalOrderUnits = React.useMemo(
     () =>
@@ -238,6 +284,7 @@ export default function App() {
       }, 0),
     [orders]
   );
+
   const readAll = React.useMemo(
     () => readings.length == totalOrderUnits,
     [readings, totalOrderUnits]
@@ -325,12 +372,15 @@ export default function App() {
     }, 1500);
   };
 
-  const removeItem  = (props: { type: any; data: any }) => {
-    
-  }
+  const removeItem = (props: { type: any; data: any }) => {};
 
   return (
     <View style={styles.container}>
+      <Stack.Screen
+        options={{
+          title: "Encomenda " + id,
+        }}
+      />
       <CameraView
         style={styles.camera}
         barcodeScannerSettings={{ barcodeTypes: ["qr", "ean13"] }}
@@ -358,7 +408,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 2,
     justifyContent: "center",
     margin: "2%",
   },

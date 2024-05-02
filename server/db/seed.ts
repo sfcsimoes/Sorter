@@ -16,6 +16,7 @@ import {
 	type NewShipmentOrder,
 	type ProductsInShipmentOrders,
 	type NewProductsInShipmentOrders,
+	productsInShipmentOrdersOnBoxes,
 } from './schema';
 
 const sqlite = new Database('./db/demo.db');
@@ -39,6 +40,10 @@ async function addWarehouse(warehouse: NewWarehouse): Promise<Warehouse> {
 
 async function addProductsInShipmentOrders(productsInShipmentOrder: NewProductsInShipmentOrders): Promise<ProductsInShipmentOrders> {
 	return (await db.insert(productsInShipmentOrders).values(productsInShipmentOrder).returning()).at(0)!;
+}
+
+async function add(values: any) {
+	return (await db.insert(productsInShipmentOrdersOnBoxes).values(values));
 }
 
 const user = addUser({ name: 'Jane Developer', email: 'teste@email.com', password: '123456789' });
@@ -83,6 +88,10 @@ warehouseList.forEach(store => {
 addShipmentOrders({ status: 'Pendente', originId: 1, destinationId: 2 });
 addShipmentOrders({ status: 'Pendente', originId: 2, destinationId: 1 });
 
-addProductsInShipmentOrders({ shipmentOrder: 2, product: 1, units: 2, isInTransportationBox: false });
+// addProductsInShipmentOrders({ shipmentOrder: 2, product: 1, units: 2, isInTransportationBox: true, transportationBox: 3 });
+// addProductsInShipmentOrders({ shipmentOrder: 2, product: 2, units: 2, isInTransportationBox: false });
+addProductsInShipmentOrders({ shipmentOrder: 2, product: 1, units: 2, isInTransportationBox: true });
 addProductsInShipmentOrders({ shipmentOrder: 2, product: 2, units: 2, isInTransportationBox: false });
 
+
+add({ productsInShipmentOrdersId: 1, transportationBox: 3 });

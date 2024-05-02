@@ -68,8 +68,24 @@ app.get('/shipmentOrder/:id', async (req, res) => {
       with: {
         productsInShipmentOrders: {
           with: {
-            products: true
+            products: true,
+            productsInShipmentOrdersOnBoxes: true
           },
+          // where: (productsInShipmentOrders, { eq }) => eq(productsInShipmentOrders.isInTransportationBox, false),
+        },
+      },
+    });
+
+  const test = await db.query.productsInShipmentOrdersOnBoxes.findFirst(
+    {
+      // where: (shipmentOrders, { eq }) => eq(shipmentOrders.id, parseFloat(id)),
+      with: {
+        productsInShipmentOrders: {
+          with: {
+            products: true,
+            productsInShipmentOrdersOnBoxes: true
+          },
+          // where: (productsInShipmentOrders, { eq }) => eq(productsInShipmentOrders.isInTransportationBox, false),
         },
       },
     });
@@ -83,7 +99,7 @@ app.put('/shipmentOrders/:id', async (req, res) => {
     .set({ status: 'Concluida' })
     .where(eq(schema.shipmentOrders.id, parseFloat(id)));
 
-    res.json("Ok")
+  res.json("Ok")
 })
 
 

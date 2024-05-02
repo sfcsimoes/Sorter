@@ -4,8 +4,6 @@ import * as schema from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import migrations from "@/drizzle/migrations.js";
-import { View, Text } from "react-native";
-import * as SQLite from 'expo-sqlite/next';
 
 export class DatabaseHelper {
     public db: any;
@@ -24,6 +22,12 @@ export class DatabaseHelper {
         const expoDb = openDatabaseSync("db.db");
         const db = drizzle(expoDb);
         const { success, error } = useMigrations(db, migrations);
+    }
+
+    async getUser(id: number){
+        return await this.db.query.users.findFirst({
+            where: eq(schema.users.id, id)
+        });
     }
 
     async getWarehouses() {

@@ -63,7 +63,13 @@ export default function TabOneScreen() {
           renderItem={({ item, index }) => {
             return (
               <>
-                <Link href="/order" asChild>
+                <Link
+                  href={{
+                    pathname: "/order",
+                    params: { id: item.id.toString() },
+                  }}
+                  asChild
+                >
                   <Pressable style={styles.list}>
                     <View style={{ flex: 4 }}>
                       <Text style={styles.title}>Encomenda {item.id}</Text>

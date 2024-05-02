@@ -1,35 +1,39 @@
 import React from "react";
 import { StyleSheet, Pressable, Dimensions } from "react-native";
-
-import EditScreenInfo from "@/components/EditScreenInfo";
-import { Text, View, TextInput } from "@/components/Themed";
+import { Text, View } from "@/components/Themed";
 import { FlashList } from "@shopify/flash-list";
-import { Link } from "expo-router";
+import { Redirect } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-// import { drizzle } from "drizzle-orm/expo-sqlite";
-// import { openDatabaseSync } from "expo-sqlite/next";
 import * as schema from "@/db/schema";
 import { DatabaseHelper } from "@/db/database";
-// import { eq } from "drizzle-orm";
-
-// const expo = openDatabaseSync("db.db");
-// const db = drizzle(expo, { schema });
+import { useStorageState } from "@/auth/useStorageState";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function TabOneScreen() {
-  interface Warehouse {
-    id: number;
-    name: string;
-    address: any;
-    createdAt: string;
-    updatedAt: string;
-  }
-
-  const [text, onChangeText] = React.useState("Useless Text");
-  const [number, onChangeNumber] = React.useState("");
-  const [warehouses, setWarehouses] = React.useState<Warehouse[]>([]);
   const [localWarehouses, setLocalWarehouses] = React.useState<
     schema.Warehouse[]
   >([]);
+  const [warehouseId, setWarehouseId] = React.useState<string>("");
+
+  const storeData = async (value: string) => {
+    try {
+      setWarehouseId(value);
+      await AsyncStorage.setItem("warehouseId", value);
+    } catch (e) {
+      // saving error
+    }
+  };
+
+  const getData = async () => {
+    try {
+      const value = await AsyncStorage.getItem("warehouseId");
+      if (value !== null) {
+        setWarehouseId(value);
+      }
+    } catch (e) {
+      // error reading value
+    }
+  };
 
   React.useEffect(() => {
     async function setup() {
@@ -42,6 +46,19 @@ export default function TabOneScreen() {
     }
     setup();
   }, []);
+
+  getData();
+
+  if (warehouseId) {
+    return (
+      <Redirect
+        href={{
+          pathname: "/orders",
+          params: { id: warehouseId },
+        }}
+      />
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -61,21 +78,17 @@ export default function TabOneScreen() {
           renderItem={({ item, index }) => {
             return (
               <>
-                <Link
-                  href={{
-                    pathname: "/orders",
-                    params: { id: item.id },
-                    // params: { warehouseName: item.name  },
+                <Pressable
+                  style={styles.list}
+                  onPress={() => {
+                    setWarehouseId(item.id.toString());
                   }}
-                  asChild
                 >
-                  <Pressable style={styles.list}>
-                    <View style={{ flex: 4 }}>
-                      <Text style={styles.title}>{item.name}</Text>
-                      <Text style={styles.subTitle}>{item.address}</Text>
-                    </View>
-                  </Pressable>
-                </Link>
+                  <View style={{ flex: 4 }}>
+                    <Text style={styles.title}>{item.name}</Text>
+                    <Text style={styles.subTitle}>{item.address}</Text>
+                  </View>
+                </Pressable>
 
                 <View
                   style={styles.separator}

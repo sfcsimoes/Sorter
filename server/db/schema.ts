@@ -37,7 +37,7 @@ export const products = sqliteTable('products', {
 
 export const productsRelations = relations(products, ({ many }) => ({
 	productsInShipmentOrders: many(productsInShipmentOrders),
-	productsInShipmentOrdersOnBoxes: many(productsInShipmentOrdersOnBoxes),
+	// productsInShipmentOrdersOnBoxes: many(productsInShipmentOrdersOnBoxes),
 }));
 
 export const shipmentOrders = sqliteTable('shipmentOrders', {
@@ -55,12 +55,12 @@ export const shipmentOrdersRelations = relations(shipmentOrders, ({ many }) => (
 
 export const productsInShipmentOrders = sqliteTable('productsInShipmentOrders', {
 	id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
-	product: integer('productId').references(() => products.id),
+	productId: integer('productId').references(() => products.id),
 	shipmentOrder: integer('shipmentOrderId').references(() => shipmentOrders.id),
 	units: integer('units'),
 	fulfilledBy: integer('fulfilledBy').references(() => users.id),
 	isInTransportationBox: integer('isInTransportationBox', { mode: 'boolean' }),
-	// transportationBox: integer('transportationBoxId').references(() => products.id),
+	transportationBoxId: integer('transportationBoxId').references(() => products.id),
 }
 	// , (t) => ({
 	// 	pk: primaryKey({ columns: [t.product, t.shipmentOrder] })
@@ -68,37 +68,37 @@ export const productsInShipmentOrders = sqliteTable('productsInShipmentOrders', 
 );
 
 export const productsInShipmentOrdersRelations = relations(productsInShipmentOrders, ({ one, many }) => ({
-	products: one(products, {
-		fields: [productsInShipmentOrders.product],
+	product: one(products, {
+		fields: [productsInShipmentOrders.productId],
 		references: [products.id],
 	}),
 	shipmentOrders: one(shipmentOrders, {
 		fields: [productsInShipmentOrders.shipmentOrder],
 		references: [shipmentOrders.id],
 	}),
-	productsInShipmentOrdersOnBoxes: many(productsInShipmentOrdersOnBoxes),
-	// transportationBox: one(products, {
-	// 	fields: [productsInShipmentOrders.transportationBox],
-	// 	references: [products.id],
-	// }),
-}));
-
-export const productsInShipmentOrdersOnBoxes = sqliteTable('productsInShipmentOrdersOnBoxes', {
-	id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
-	transportationBox: integer('transportationBoxId').references(() => products.id),
-	productsInShipmentOrdersId: integer('productsInShipmentOrdersId').references(() => productsInShipmentOrders.id),
-});
-
-export const productsInShipmentOrdersOnBoxesRelations = relations(productsInShipmentOrdersOnBoxes, ({ one }) => ({
-	productsInShipmentOrders: one(productsInShipmentOrders, {
-		fields: [productsInShipmentOrdersOnBoxes.productsInShipmentOrdersId],
-		references: [productsInShipmentOrders.id],
-	}),
+	// productsInShipmentOrdersOnBoxes: many(productsInShipmentOrdersOnBoxes),
 	transportationBox: one(products, {
-		fields: [productsInShipmentOrdersOnBoxes.transportationBox],
+		fields: [productsInShipmentOrders.transportationBoxId],
 		references: [products.id],
 	}),
 }));
+
+// export const productsInShipmentOrdersOnBoxes = sqliteTable('productsInShipmentOrdersOnBoxes', {
+// 	id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+// 	transportationBox: integer('transportationBoxId').references(() => products.id),
+// 	productsInShipmentOrdersId: integer('productsInShipmentOrdersId').references(() => productsInShipmentOrders.id),
+// });
+
+// export const productsInShipmentOrdersOnBoxesRelations = relations(productsInShipmentOrdersOnBoxes, ({ one }) => ({
+// 	productsInShipmentOrders: one(productsInShipmentOrders, {
+// 		fields: [productsInShipmentOrdersOnBoxes.productsInShipmentOrdersId],
+// 		references: [productsInShipmentOrders.id],
+// 	}),
+// 	transportationBox: one(products, {
+// 		fields: [productsInShipmentOrdersOnBoxes.transportationBox],
+// 		references: [products.id],
+// 	}),
+// }));
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;

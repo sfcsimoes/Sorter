@@ -5,27 +5,50 @@ export interface Warehouse {
     createdAt: string;
     updatedAt: string;
 }
-
-export interface ProductsInShipmentOrdersEntity {
-    products: Product;
-    shipmentOrder: number;
-    units: number;
-    isInTransportationBox: boolean;
-    transportationBox?: Product;
-    product: number | null;
+export interface ShipmentOrder {
+    id: number
+    originId: number
+    destinationId: number
+    status: string
+    createdAt: string
+    updatedAt: string
+    productsInShipmentOrders: ProductsInShipmentOrder[]
+    productsInBoxes: ProductsInShipmentOrder[]
 }
+
+export interface ProductsInShipmentOrder {
+    id: number
+    productId: number
+    shipmentOrder: number
+    units: number
+    fulfilledBy: any
+    isInTransportationBox: boolean
+    transportationBoxId?: number
+    product: Product
+    transportationBox?: TransportationBox
+}
+
 export interface Product {
-    id: number;
-    name: string;
-    ean: string;
-    isTransportationBox: boolean;
-    createdAt: string;
-    updatedAt: string;
+    id: number
+    name: string
+    ean: string
+    isTransportationBox: boolean
+    createdAt: string
+    updatedAt: string
+}
+
+export interface TransportationBox {
+    id: number
+    name: string
+    ean: string
+    isTransportationBox: boolean
+    createdAt: string
+    updatedAt: string
 }
 
 export type AuxParameters = {
     isBox: boolean | null | undefined;
     showItems: boolean;
     handleClick: any;
-    item: ProductsInShipmentOrdersEntity;
+    item: ProductsInShipmentOrder;
 };

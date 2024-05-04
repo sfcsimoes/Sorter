@@ -16,7 +16,7 @@ import {
 	type NewShipmentOrder,
 	type ProductsInShipmentOrders,
 	type NewProductsInShipmentOrders,
-	productsInShipmentOrdersOnBoxes,
+	// productsInShipmentOrdersOnBoxes,
 } from './schema';
 
 const sqlite = new Database('./db/demo.db');
@@ -42,9 +42,9 @@ async function addProductsInShipmentOrders(productsInShipmentOrder: NewProductsI
 	return (await db.insert(productsInShipmentOrders).values(productsInShipmentOrder).returning()).at(0)!;
 }
 
-async function add(values: any) {
-	return (await db.insert(productsInShipmentOrdersOnBoxes).values(values));
-}
+// async function add(values: any) {
+// 	return (await db.insert(productsInShipmentOrdersOnBoxes).values(values));
+// }
 
 const user = addUser({ name: 'Jane Developer', email: 'teste@email.com', password: '123456789' });
 
@@ -90,8 +90,8 @@ addShipmentOrders({ status: 'Pendente', originId: 2, destinationId: 1 });
 
 // addProductsInShipmentOrders({ shipmentOrder: 2, product: 1, units: 2, isInTransportationBox: true, transportationBox: 3 });
 // addProductsInShipmentOrders({ shipmentOrder: 2, product: 2, units: 2, isInTransportationBox: false });
-addProductsInShipmentOrders({ shipmentOrder: 2, product: 1, units: 2, isInTransportationBox: true });
-addProductsInShipmentOrders({ shipmentOrder: 2, product: 2, units: 2, isInTransportationBox: false });
+addProductsInShipmentOrders({ shipmentOrder: 2, productId: 1, units: 2, isInTransportationBox: true, transportationBoxId: 2 });
+addProductsInShipmentOrders({ shipmentOrder: 2, productId: 2, units: 2, isInTransportationBox: false, transportationBoxId: 2 });
 
 
-add({ productsInShipmentOrdersId: 1, transportationBox: 3 });
+// add({ productsInShipmentOrdersId: 1, transportationBox: 3 });

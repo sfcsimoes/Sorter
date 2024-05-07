@@ -7,7 +7,6 @@ import {
   Text,
   TouchableOpacity,
   Switch,
-  Image,
 } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { MonoText } from "@/components/StyledText";
@@ -17,14 +16,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColorScheme } from "@/components/useColorScheme";
 import { Picker } from "@react-native-picker/picker";
 import { DatabaseHelper } from "@/db/database";
-import * as schema from "@/db/schema";
-import { Stack } from "expo-router";
+import { Warehouse } from "@/types/types";
 
 function WarehousePicket(props: { iconColor: string }) {
   const pickerRef = useRef<any>();
   const [warehouseId, setWarehouseId] = React.useState<string>("-1");
   const [localWarehouses, setLocalWarehouses] = React.useState<
-    schema.Warehouse[]
+    Warehouse[]
   >([]);
   const [warehouse, setWarehouse] = React.useState<string>("");
 
@@ -107,11 +105,6 @@ function WarehousePicket(props: { iconColor: string }) {
         ref={pickerRef}
         selectedValue={warehouseId}
         dropdownIconColor={dropDownIconColor}
-        itemStyle={{ color: "red" }}
-        // itemStyle={{
-        //   backgroundColor: "black",
-        //   color: "white",
-        // }}
         onValueChange={(itemValue, itemIndex) => {
           if (itemValue) storeData(itemValue.toString());
         }}

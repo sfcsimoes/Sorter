@@ -1,6 +1,6 @@
 import { CameraView, useCameraPermissions } from "expo-camera/next";
 import { useState } from "react";
-import { StyleSheet, Pressable, Button } from "react-native";
+import { StyleSheet, Pressable, Vibration } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { Text, View } from "@/components/Themed";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -10,21 +10,37 @@ import Toast from "react-native-toast-message";
 import StyledButton from "@/components/StyledButtont";
 import {
   AuxParameters,
+  ProductsInBoxes,
   ProductsInShipmentOrder,
   ShipmentOrder,
 } from "@/types/types";
-import { Stack, useRouter, useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams, router } from "expo-router";
 import { atom, useAtom } from "jotai";
+import { DatabaseHelper } from "@/db/database";
 
 const productsAtom = atom<ProductsInShipmentOrder[]>([]);
+const shipmentOrderAtom = atom<ShipmentOrder>({
+  id: 0,
+  originId: 0,
+  destinationId: 0,
+  statusId: 0,
+  createdAt: "",
+  updatedAt: "",
+  synchronizationId: "",
+  productsInShipmentOrders: [],
+  productsInBoxes: [],
+});
 const readingsAtom = atom<string[]>([]);
+const boxesAtom = atom<ProductsInBoxes[]>([]);
 
 function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
   const [readings, setReadings] = useAtom(readingsAtom);
   const [products, setProducts] = useAtom(productsAtom);
-  let product = products.find((i: any) => i.product?.ean == item.product?.ean);
 
-  if (!isBox) {
+  if (!isBox && item) {
+    let product = products.find(
+      (i: any) => i.product?.ean == item.product?.ean
+    );
     return (
       <>
         <View>
@@ -32,9 +48,9 @@ function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
             onPress={() => {
               var index = readings.findIndex((i) => i == item.product?.ean);
               if (index > -1) {
-                var copy = [...readings];
-                copy.splice(index, 1);
-                setReadings([...copy]);
+                Vibration.vibrate(15);
+                // var copy = [...readings];
+                setReadings((p) => p.splice(index, 1));
               }
             }}
             title={undefined}
@@ -46,6 +62,7 @@ function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
         <View style={{ marginLeft: 8 }}>
           <StyledButton
             onPress={() => {
+              console.log('Add')
               if (
                 item?.units &&
                 readings.filter((i) => i == item.product?.ean).length >=
@@ -57,19 +74,34 @@ function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
                   visibilityTime: 1750,
                 });
               } else {
+                console.log('Add 2')
                 if (item.product?.ean) {
                   setReadings([...readings, item.product?.ean]);
-                  // Toast.show({
-                  //   type: "success",
-                  //   text1: "Produto Adicionado",
-                  //   visibilityTime: 1000,
-                  // });
+                  Vibration.vibrate(15);
                 }
               }
             }}
             title={undefined}
             variant="default"
             icon={<FontAwesome name="plus" size={18} />}
+          />
+        </View>
+
+        <View style={{ marginLeft: 8 }}>
+          <StyledButton
+            onPress={() => {
+              if (item.isInTransportationBox) {
+                item.isInTransportationBox = false;
+                item.transportationBoxId = 0;
+              } else {
+                item.isInTransportationBox = true;
+                item.transportationBoxId = 3;
+              }
+              setProducts((p) => [...p]);
+            }}
+            title={undefined}
+            variant="default"
+            icon={<FontAwesome name="shopping-basket" size={18} />}
           />
         </View>
       </>
@@ -104,207 +136,282 @@ function List(props: {
   orders: ProductsInShipmentOrder[];
   readings: String[];
 }) {
-  const [showItems, setShowItems] = useState(false);
+  const [showItems, setShowItems] = useState(true);
   const colorScheme = useColorScheme();
   const [readings, setReadings] = useAtom(readingsAtom);
+  const [boxes, setBoxes] = useAtom(boxesAtom);
 
   function handleClick() {
     setShowItems(!showItems);
   }
-  var boxes: any[] = [];
-  var notInBoxes: any[] = [];
-  props.orders.forEach((element) => {
-    if (element.isInTransportationBox) {
-      let find = boxes.find(
-        (i) => i.transportationBoxId == element.transportationBoxId
-      );
-      if (find) {
-        find.items.push(element);
-      } else {
-        boxes.push({
-          transportationBoxId: element.transportationBoxId,
-          items: [element],
-        });
+  // var boxes: ProductsInBoxes[] = [];
+  // var notInBoxes: any[] = [];
+
+  const notInBoxes = React.useMemo(() => {
+    return props.orders.filter((i) => i.isInTransportationBox == false);
+  }, [props.orders]);
+
+  const InBoxes = React.useMemo(() => {
+    var boxesHolder: ProductsInBoxes[] = [];
+    props.orders.forEach((element) => {
+      if (element.isInTransportationBox) {
+        let find = boxesHolder.find(
+          (i) => i.transportationBoxId == element.transportationBoxId
+        );
+        if (find) {
+          find.products.push(element);
+        } else {
+          boxesHolder.push({
+            transportationBoxId: element.transportationBoxId,
+            products: [element],
+          });
+        }
       }
-    } else {
-      notInBoxes.push(element);
-    }
-  });
+    });
+    return boxesHolder;
+  }, [props.orders]);
+
+  console.log(props.readings);
 
   return (
     <>
-      <FlashList
-        data={notInBoxes}
-        renderItem={({ item, index }) => {
-          return (
+      <View style={{ flex: 1 }}>
+        <FlashList
+          data={notInBoxes}
+          renderItem={({ item, index }) => {
+            return (
+              <>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginTop: 2,
+                  }}
+                >
+                  <View style={{ marginLeft: 2, flex: 6 }}>
+                    <Text style={styles.title}>{item.product?.name}</Text>
+                    <Text style={styles.subTitle}>
+                      Quantidade:{" "}
+                      {
+                        props.readings.filter((i) => i == item.product?.ean)
+                          .length
+                      }{" "}
+                      / {item.units}
+                    </Text>
+                    <Text style={styles.subTitle}>
+                      EAN: {item.product?.ean}
+                    </Text>
+                  </View>
+                  <View
+                    style={{ marginLeft: 2, flex: 4, flexDirection: "row" }}
+                  >
+                    <Options
+                      isBox={item.isInTransportationBox}
+                      showItems={showItems}
+                      handleClick={handleClick}
+                      item={item}
+                    />
+                  </View>
+                </View>
+                <View
+                  style={styles.separator}
+                  lightColor="#eee"
+                  darkColor="rgba(255,255,255,0.15)"
+                />
+              </>
+            );
+          }}
+          estimatedItemSize={200}
+        />
+        <View style={{ flex: 1 }}>
+          {InBoxes.length > 0 ? (
             <>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginTop: 2,
-                }}
-              >
-                <View style={{ marginLeft: 2, flex: 4 }}>
-                  <Text style={styles.title}>{item.product?.name}</Text>
-                  <Text style={styles.subTitle}>
-                    Quantidade:{" "}
-                    {
-                      props.readings.filter((i) => i == item.product?.ean)
-                        .length
-                    }{" "}
-                    / {item.units}
-                  </Text>
-                  <Text style={styles.subTitle}>EAN: {item.product?.ean}</Text>
-                </View>
-                <View style={{ marginLeft: 2, flex: 2, flexDirection: "row" }}>
-                  <Options
-                    isBox={item.isInTransportationBox}
-                    showItems={showItems}
-                    handleClick={handleClick}
-                    item={item}
-                  />
-                </View>
+              <View style={{ marginTop: 8 }}>
+                <Text style={styles.heading} role="heading" aria-level="2">
+                  Artigos em Caixas
+                </Text>
+                <View
+                  style={styles.separator}
+                  lightColor="#eee"
+                  darkColor="rgba(255,255,255,0.15)"
+                />
               </View>
-              <View
-                style={styles.separator}
-                lightColor="#eee"
-                darkColor="rgba(255,255,255,0.15)"
-              />
             </>
-          );
-        }}
-        estimatedItemSize={100}
-      />
-      <Text>teste</Text>
-      <FlashList
-        nestedScrollEnabled={true}
-        data={boxes}
-        renderItem={({ item, index }) => {
-          return (
-            <>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginTop: 2,
-                }}
-              >
-                <View style={{ marginLeft: 2, flex: 4 }}>
-                  <Text style={styles.title}>
-                    Caixa {item.transportationBoxId}
-                  </Text>
-                </View>
-                <View style={{ marginLeft: 2, flex: 2, flexDirection: "row" }}>
-                  <Options
-                    isBox="true"
-                    showItems={showItems}
-                    handleClick={handleClick}
-                    item={item}
-                  />
-                </View>
-              </View>
-              <View
-                style={styles.separator}
-                lightColor="#eee"
-                darkColor="rgba(255,255,255,0.15)"
-              />
-              {showItems ? (
-                <>
-                  <FlashList
-                    nestedScrollEnabled={true}
-                    data={item.items}
-                    renderItem={({ item, index }) => {
-                      return (
-                        <>
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              marginTop: 2,
-                              marginLeft: 18,
-                            }}
-                          >
-                            <View style={{ marginLeft: 2, flex: 4 }}>
-                              <Text style={styles.title}>
-                                {item.product.name}
-                              </Text>
-                              <Text style={styles.subTitle}>
-                                Quantidade:{" "}
-                                {
-                                  props.readings.filter(
-                                    (i) => i == item.product?.ean
-                                  ).length
-                                }{" "}
-                                / {item.units}
-                              </Text>
-                              <Text style={styles.subTitle}>
-                                EAN: {item.product.ean}
-                              </Text>
-                            </View>
-                            <View
-                              style={{
-                                marginLeft: 2,
-                                flex: 2,
-                                flexDirection: "row",
-                              }}
-                            >
-                              <Options
-                                isBox={false}
-                                showItems={showItems}
-                                handleClick={handleClick}
-                                item={item}
-                              />
-                            </View>
-                          </View>
+          ) : (
+            <View></View>
+          )}
 
-                          <View
-                            style={styles.separator}
-                            lightColor="#eee"
-                            darkColor="rgba(255,255,255,0.15)"
-                          />
-                        </>
-                      );
+          <FlashList
+            nestedScrollEnabled={true}
+            data={InBoxes}
+            renderItem={({ item, index }) => {
+              return (
+                <>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginTop: 2,
                     }}
-                    estimatedItemSize={200}
+                  >
+                    <View style={{ marginLeft: 2, flex: 4 }}>
+                      <Text style={styles.title}>
+                        Caixa {item.transportationBoxId}
+                      </Text>
+                    </View>
+                    <View
+                      style={{ marginLeft: 2, flex: 2, flexDirection: "row" }}
+                    >
+                      <Options
+                        isBox={true}
+                        showItems={showItems}
+                        handleClick={handleClick}
+                        item={null}
+                      />
+                    </View>
+                  </View>
+                  <View
+                    style={styles.separator}
+                    lightColor="#eee"
+                    darkColor="rgba(255,255,255,0.15)"
                   />
+                  {showItems ? (
+                    <>
+                      <View style={{ minHeight: 100 }}>
+                        <FlashList
+                          nestedScrollEnabled={true}
+                          data={item.products}
+                          renderItem={({ item, index }) => {
+                            return (
+                              <>
+                                <View
+                                  style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    marginTop: 2,
+                                    marginLeft: 18,
+                                  }}
+                                >
+                                  <View style={{ marginLeft: 2, flex: 6 }}>
+                                    <Text style={styles.title}>
+                                      {item.product.name}
+                                    </Text>
+                                    <Text style={styles.subTitle}>
+                                      Quantidade:{" "}
+                                      {
+                                        props.readings.filter(
+                                          (i) => i == item.product?.ean
+                                        ).length
+                                      }{" "}
+                                      / {item.units}
+                                    </Text>
+                                    <Text style={styles.subTitle}>
+                                      EAN: {item.product.ean}
+                                    </Text>
+                                  </View>
+                                  <View
+                                    style={{
+                                      marginLeft: 2,
+                                      flex: 4,
+                                      flexDirection: "row",
+                                    }}
+                                  >
+                                    <Options
+                                      isBox={false}
+                                      showItems={showItems}
+                                      handleClick={handleClick}
+                                      item={item}
+                                    />
+                                  </View>
+                                </View>
+
+                                <View
+                                  style={styles.separator}
+                                  lightColor="#eee"
+                                  darkColor="rgba(255,255,255,0.15)"
+                                />
+                              </>
+                            );
+                          }}
+                          estimatedItemSize={200}
+                        />
+                      </View>
+                    </>
+                  ) : (
+                    <View></View>
+                  )}
                 </>
-              ) : (
-                <View></View>
-              )}
-            </>
-          );
-        }}
-        estimatedItemSize={200}
-      />
+              );
+            }}
+            estimatedItemSize={200}
+          />
+        </View>
+      </View>
     </>
   );
 }
 
-function test() {
-  // return '';
-  console.log("teste");
-}
-
 function ShowCompleteButton(props: { show: Boolean }) {
+  const [products, setProducts] = useAtom(productsAtom);
+  const [shipmentOrder, setShipmentOrder] = useAtom(shipmentOrderAtom);
+
+  async function finishOrder() {
+    try {
+      let request = await fetch(
+        process.env.EXPO_PUBLIC_API_URL + "/api/order",
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            id: shipmentOrder.id,
+            originId: shipmentOrder.originId,
+            destinationId: shipmentOrder.destinationId,
+            statusId: 2,
+            products: products.map(
+              ({
+                id,
+                shipmentOrderId,
+                productId,
+                units,
+                isInTransportationBox,
+                transportationBoxId,
+              }) => ({
+                id,
+                shipmentOrderId,
+                productId,
+                units,
+                isInTransportationBox,
+                transportationBoxId,
+              })
+            ),
+          }),
+        }
+      );
+      if (request.status == 200) {
+        router.back();
+      } else {
+        throw "Erro";
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
   if (props.show) {
-    return <StyledButton onPress={test} title="Finalizar" variant="default" />;
+    return (
+      <StyledButton onPress={finishOrder} title="Finalizar" variant="default" />
+    );
   }
 }
 
 export default function App() {
-  const router = useRouter();
   const params = useLocalSearchParams();
   const { id } = params;
   const [permission, requestPermission] = useCameraPermissions();
   const [hasScanned, setHasScanned] = React.useState(false);
-  // const [orders, setOrders] = React.useState<ProductsInShipmentOrdersEntity[]>(
-  //   []
-  // );
-
-  // const [readings, setReadings] = React.useState<String[]>([]);
   const [products, setProducts] = useAtom(productsAtom);
   const [readings, setReadings] = useAtom(readingsAtom);
+  const [shipmentOrder, setShipmentOrder] = useAtom(shipmentOrderAtom);
+  const [boxes, setBoxes] = useAtom(boxesAtom);
 
   const totalOrderUnits = React.useMemo(
     () =>
@@ -319,26 +426,31 @@ export default function App() {
     [readings, totalOrderUnits]
   );
 
+  // React.useEffect(() => {
+  //   fetch(process.env.EXPO_PUBLIC_API_URL + "/api/order?id=2")
+  //     .then((resp) => resp.json())
+  //     .then((json: ShipmentOrder) => {
+  //       // setProducts(json.productsInShipmentOrders);
+  //     })
+  //     .catch((error) => console.error(error));
+  //   // .finally(() => setLoading(false));
+  // });
+
   React.useEffect(() => {
-    fetch(process.env.EXPO_PUBLIC_API_URL + "/shipmentOrder/2")
-      .then((resp) => resp.json())
-      .then((json: ShipmentOrder) => {
-        // json.productsInBoxes = [];
-        // json.productsInShipmentOrders.forEach((element,index) => {
-        //   if (element.transportationBoxId) {
-        //     json.productsInBoxes.push(element);
-        //   }
-        // json.productsInShipmentOrders.splice(index,1);
+    async function setup() {
+      let db = new DatabaseHelper();
+      if (id) {
+        let shipmentOrder = await db.getShipmentOrder(parseInt(id.toString()));
+        setShipmentOrder(shipmentOrder);
 
-        // });
-        // console.log(json)
-        setProducts(json.productsInShipmentOrders);
-      })
-      .catch((error) => console.error(error));
-    // .finally(() => setLoading(false));
-  });
-
-  // React.useEffect(() => {}, [orders]);
+        let products = await db.getShipmentOrdersProducts(
+          parseInt(id.toString())
+        );
+        setProducts(products);
+      }
+    }
+    setup();
+  }, []);
 
   if (!permission) {
     // Camera permissions are still loading
@@ -382,6 +494,13 @@ export default function App() {
     var product = products.find((i: any) => i.product?.ean == ean);
 
     if (product == null || product == undefined) {
+      setBoxes((oldBox) => [
+        ...oldBox,
+        {
+          transportationBoxId: 3,
+          products: [],
+        },
+      ]);
       Toast.show({
         type: "error",
         text1: "Artigo nao esta no pedido",
@@ -413,8 +532,6 @@ export default function App() {
       setHasScanned(false);
     }, 1500);
   };
-
-  const removeItem = (props: { type: any; data: any }) => {};
 
   return (
     <View style={styles.container}>
@@ -452,7 +569,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 2,
     justifyContent: "center",
-    margin: "2%",
+    padding: "2%",
   },
   camera: {
     flex: 1,

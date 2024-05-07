@@ -1,9 +1,55 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "8a3540fb-0d13-49ea-9265-aa4812dce8a8",
+  "id": "43343611-3238-4c8f-a244-c2a55f58897a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
+    "orderStatus": {
+      "name": "orderStatus",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "synchronizationId": {
+          "name": "synchronizationId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "(CURRENT_TIMESTAMP)"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "(CURRENT_TIMESTAMP)"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "products": {
       "name": "products",
       "columns": {
@@ -35,6 +81,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "synchronizationId": {
+          "name": "synchronizationId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "createdAt": {
           "name": "createdAt",
           "type": "text",
@@ -60,15 +113,22 @@
     "productsInShipmentOrders": {
       "name": "productsInShipmentOrders",
       "columns": {
-        "productId": {
-          "name": "productId",
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "shipmentOrderId": {
+          "name": "shipmentOrderId",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "shipmentOrderId": {
-          "name": "shipmentOrderId",
+        "productId": {
+          "name": "productId",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
@@ -105,12 +165,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "productsInShipmentOrders_productId_products_id_fk": {
-          "name": "productsInShipmentOrders_productId_products_id_fk",
+        "productsInShipmentOrders_shipmentOrderId_shipmentOrders_id_fk": {
+          "name": "productsInShipmentOrders_shipmentOrderId_shipmentOrders_id_fk",
           "tableFrom": "productsInShipmentOrders",
-          "tableTo": "products",
+          "tableTo": "shipmentOrders",
           "columnsFrom": [
-            "productId"
+            "shipmentOrderId"
           ],
           "columnsTo": [
             "id"
@@ -118,12 +178,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "productsInShipmentOrders_shipmentOrderId_shipmentOrders_id_fk": {
-          "name": "productsInShipmentOrders_shipmentOrderId_shipmentOrders_id_fk",
+        "productsInShipmentOrders_productId_products_id_fk": {
+          "name": "productsInShipmentOrders_productId_products_id_fk",
           "tableFrom": "productsInShipmentOrders",
-          "tableTo": "shipmentOrders",
+          "tableTo": "products",
           "columnsFrom": [
-            "shipmentOrderId"
+            "productId"
           ],
           "columnsTo": [
             "id"
@@ -158,15 +218,7 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {
-        "productsInShipmentOrders_productId_shipmentOrderId_pk": {
-          "columns": [
-            "productId",
-            "shipmentOrderId"
-          ],
-          "name": "productsInShipmentOrders_productId_shipmentOrderId_pk"
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
     "shipmentOrders": {
@@ -193,8 +245,15 @@
           "notNull": false,
           "autoincrement": false
         },
-        "status": {
-          "name": "status",
+        "statusId": {
+          "name": "statusId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "synchronizationId": {
+          "name": "synchronizationId",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -244,6 +303,19 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "shipmentOrders_statusId_orderStatus_id_fk": {
+          "name": "shipmentOrders_statusId_orderStatus_id_fk",
+          "tableFrom": "shipmentOrders",
+          "tableTo": "orderStatus",
+          "columnsFrom": [
+            "statusId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -263,33 +335,26 @@
           "name": "name",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "email": {
           "name": "email",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "password": {
           "name": "password",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
-        "warehouseId": {
-          "name": "warehouseId",
+        "settings": {
+          "name": "settings",
           "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "darkMode": {
-          "name": "darkMode",
-          "type": "integer",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -300,7 +365,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "default": "CURRENT_TIMESTAMP"
         },
         "updatedAt": {
           "name": "updatedAt",
@@ -308,7 +373,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "default": "CURRENT_TIMESTAMP"
         }
       },
       "indexes": {},
@@ -335,6 +400,13 @@
         },
         "address": {
           "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "synchronizationId": {
+          "name": "synchronizationId",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

@@ -1,10 +1,13 @@
-import type { Config } from 'drizzle-kit';
+import { type Config } from "drizzle-kit";
+
+import { env } from "@/env";
 
 export default {
-	schema: './db/schema.ts',
-	out: './db/migrations',
-	driver: 'better-sqlite',
-	dbCredentials: {
-		url: './db/demo.db',
-	},
+  schema: "./src/server/db/schema.ts",
+  driver: "libsql",
+  dbCredentials: {
+    url: env.DATABASE_URL,
+  },
+  tablesFilter: ["sorter_*"],
+  out: "@"
 } satisfies Config;

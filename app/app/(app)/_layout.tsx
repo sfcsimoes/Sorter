@@ -68,29 +68,7 @@ export default function RootLayout() {
      return <Redirect href="/login" />;
    }
 
-  // return <Migration />;
-
   return <RootLayoutNav />;
-}
-
-function Migration() {
-  // var db = new DatabaseHelper();
-  // db.Migration();
-  const { success, error } = useMigrations(db, migrations);
-  if (error) {
-    return (
-      <View>
-        <Text>Migration error: {error.message}</Text>
-      </View>
-    );
-  }
-  if (!success) {
-    return (
-      <View>
-        <Text>Migration is in progress...</Text>
-      </View>
-    );
-  }
 }
 
 function RootLayoutNav() {

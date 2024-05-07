@@ -1,25 +1,39 @@
-import {  integer, text, sqliteTable, primaryKey } from 'drizzle-orm/sqlite-core';
-import { sql, relations } from 'drizzle-orm';
+import { relations, sql } from "drizzle-orm";
+import {
+	int,
+	primaryKey,
+	sqliteTableCreator,
+	text,
+} from "drizzle-orm/sqlite-core";
+import uuid from 'react-native-uuid';
 
-export const users = sqliteTable('users', {
-	id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
-	name: text('name'),
-	email: text('email'),
-	password: text('password'),
-	warehouseId: text('warehouseId'),
-	darkMode: integer('darkMode', { mode: 'boolean' }),
-	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
-	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
+/**
+ * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
+ * database instance for multiple projects.
+ *
+ * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
+ */
+export const createTable = sqliteTableCreator((name) => `${name}`);
+
+export const users = createTable('users', {
+	id: int('id', { mode: 'number' }).primaryKey(),
+	name: text('name').notNull(),
+	email: text('email').notNull(),
+	password: text('password').notNull(),
+	settings: text('settings', { mode: 'json' }),
+	createdAt: text("createdAt").default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: text("updatedAt").default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
 	productsInShipmentOrders: many(shipmentOrders),
 }));
 
-export const warehouses = sqliteTable('warehouses', {
-	id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+export const warehouses = createTable('warehouses', {
+	id: int('id', { mode: 'number' }).primaryKey(),
 	name: text('name'),
 	address: text('address'),
+	synchronizationId: text("synchronizationId").$defaultFn(() => uuid.v4().toString()),
 	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
 });
@@ -28,11 +42,12 @@ export const warehousesRelations = relations(warehouses, ({ many }) => ({
 	shipmentOrders: many(shipmentOrders),
 }));
 
-export const products = sqliteTable('products', {
-	id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+export const products = createTable('products', {
+	id: int('id', { mode: 'number' }).primaryKey(),
 	name: text('name'),
 	ean: text('ean'),
-	isTransportationBox: integer('isTransportationBox', { mode: 'boolean' }),
+	isTransportationBox: int('isTransportationBox', { mode: 'boolean' }),
+	synchronizationId: text("synchronizationId").$defaultFn(() => uuid.v4().toString()),
 	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
 });
@@ -41,52 +56,65 @@ export const productsRelations = relations(products, ({ many }) => ({
 	productsInShipmentOrders: many(productsInShipmentOrders),
 }));
 
-export const shipmentOrders = sqliteTable('shipmentOrders', {
-	id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
-	originId: integer('originId').references(() => warehouses.id),
-	destinationId: integer('destinationId').references(() => warehouses.id),
-	status: text('status', { enum: ['Concluida', 'Cancelada', 'Pendente'] }),
+export const orderStatus = createTable('orderStatus', {
+	id: int('id', { mode: 'number' }).primaryKey(),
+	name: text('name'),
+	synchronizationId: text("synchronizationId").$defaultFn(() => uuid.v4().toString()),
 	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const shipmentOrdersRelations = relations(shipmentOrders, ({ many }) => ({
-	productsInShipmentOrders: many(productsInShipmentOrders),
+export const orderStatusRelations = relations(orderStatus, ({ many }) => ({
+	shipmentOrders: many(shipmentOrders),
 }));
 
-export const productsInShipmentOrders = sqliteTable('productsInShipmentOrders', {
-	product: integer('productId').references(() => products.id),
-	shipmentOrder: integer('shipmentOrderId').references(() => shipmentOrders.id),
-	units: integer('units'),
-	fulfilledBy: integer('fulfilledBy').references(() => users.id),
-	isInTransportationBox: integer('isInTransportationBox', { mode: 'boolean' }),
-	transportationBox: integer('transportationBoxId').references(() => products.id),
-}, (t) => ({
-	pk: primaryKey({ columns: [t.product, t.shipmentOrder] })
+export const shipmentOrders = createTable('shipmentOrders', {
+	id: int('id', { mode: 'number' }).primaryKey(),
+	originId: int('originId').references(() => warehouses.id),
+	destinationId: int('destinationId').references(() => warehouses.id),
+	statusId: int('statusId').references(() => orderStatus.id),
+	synchronizationId: text("synchronizationId").$defaultFn(() => uuid.v4().toString()),
+	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
+	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
+});
+
+export const shipmentOrdersRelations = relations(shipmentOrders, ({ one, many }) => ({
+	productsInShipmentOrders: many(productsInShipmentOrders),
+	originId: one(warehouses, {
+		fields: [shipmentOrders.originId],
+		references: [warehouses.id],
+	}),
+	destinationId: one(warehouses, {
+		fields: [shipmentOrders.destinationId],
+		references: [warehouses.id],
+	}),
+	statusId: one(orderStatus, {
+		fields: [shipmentOrders.statusId],
+		references: [orderStatus.id],
+	}),
 }));
+
+export const productsInShipmentOrders = createTable('productsInShipmentOrders', {
+	id: int('id', { mode: 'number' }).primaryKey(),
+	shipmentOrderId: int('shipmentOrderId').references(() => shipmentOrders.id),
+	productId: int('productId').references(() => products.id),
+	units: int('units'),
+	fulfilledBy: int('fulfilledBy').references(() => users.id),
+	isInTransportationBox: int('isInTransportationBox', { mode: 'boolean' }),
+	transportationBoxId: int('transportationBoxId').references(() => products.id),
+});
 
 export const productsInShipmentOrdersRelations = relations(productsInShipmentOrders, ({ one }) => ({
-	products: one(products, {
-		fields: [productsInShipmentOrders.product],
+	product: one(products, {
+		fields: [productsInShipmentOrders.productId],
 		references: [products.id],
 	}),
 	shipmentOrders: one(shipmentOrders, {
-		fields: [productsInShipmentOrders.shipmentOrder],
+		fields: [productsInShipmentOrders.shipmentOrderId],
 		references: [shipmentOrders.id],
 	}),
+	transportationBox: one(products, {
+		fields: [productsInShipmentOrders.transportationBoxId],
+		references: [products.id],
+	}),
 }));
-
-export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
-
-export type Product = typeof products.$inferSelect;
-export type NewProduct = typeof products.$inferInsert;
-
-export type Warehouse = typeof warehouses.$inferSelect;
-export type NewWarehouse= typeof warehouses.$inferInsert;
-
-export type ShipmentOrder = typeof shipmentOrders.$inferSelect;
-export type NewShipmentOrder = typeof shipmentOrders.$inferInsert;
-
-export type ProductsInShipmentOrders = typeof productsInShipmentOrders.$inferSelect;
-export type NewProductsInShipmentOrders = typeof productsInShipmentOrders.$inferInsert;

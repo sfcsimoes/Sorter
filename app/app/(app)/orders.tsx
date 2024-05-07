@@ -9,20 +9,14 @@ import { Stack } from "expo-router";
 import { useNavigation, useRouter, useLocalSearchParams } from "expo-router";
 import { DatabaseHelper } from "@/db/database";
 import * as schema from "@/db/schema";
+import { OrderStatus, ShipmentOrder, Warehouse } from "@/types/types";
 
 export default function TabOneScreen() {
-  interface Order {
-    id: String;
-    createdAt: String;
-    updatedAt: String;
-    status: String;
-  }
-  const [text, onChangeText] = React.useState("Useless Text");
+  const [text, onChangeText] = React.useState("Nº Encomenda");
   const [number, onChangeNumber] = React.useState("");
-  const [orders, setOrders] = React.useState<Order[]>([]);
-  const [warehouse, setWarehouse] = React.useState<schema.Warehouse>();
-  const navigation = useNavigation();
-  const router = useRouter();
+  const [orders, setOrders] = React.useState<ShipmentOrder[]>([]);
+  const [orderStatus, setOrderStatus] = React.useState<OrderStatus[]>([]);
+  const [warehouse, setWarehouse] = React.useState<Warehouse>();
   const params = useLocalSearchParams();
   const { id } = params;
 
@@ -30,9 +24,9 @@ export default function TabOneScreen() {
     async function setup() {
       var db = new DatabaseHelper();
       setWarehouse(await db.getWarehouse(parseInt(id.toString())));
-      // db.syncShipmentOrders(parseInt(id.toString(), 10));
+      db.syncShipmentOrders(parseInt(id.toString(), 10));
       const result = await db.getShipmentOrders(parseInt(id.toString(), 10));
-
+      setOrderStatus(await db.getOrderStatus());
       setOrders(result);
     }
     setup();
@@ -45,7 +39,7 @@ export default function TabOneScreen() {
           title: warehouse?.name || "s",
         }}
       />
-      <Text style={styles.title}>Tab One t</Text>
+      <Text style={styles.title}>Encomendas</Text>
       <TextInput
         style={styles.input}
         onChangeText={onChangeText}
@@ -75,13 +69,14 @@ export default function TabOneScreen() {
                       <Text style={styles.title}>Encomenda {item.id}</Text>
                       <Text
                         style={styles.subTitle}
-                        // className="text-muted-foreground"
                       >
                         {item.createdAt}
                       </Text>
                     </View>
                     <View style={{ flex: 2, justifyContent: "center" }}>
-                      <Text style={styles.title}>{item.status}</Text>
+                      <Text style={styles.title}>
+                        {orderStatus.find((i) => i.id == item.statusId)?.name}
+                      </Text>
                     </View>
                   </Pressable>
                 </Link>
@@ -112,7 +107,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    margin: "4%",
+    padding: "4%",
   },
   title: {
     fontSize: 22,

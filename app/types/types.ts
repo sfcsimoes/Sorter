@@ -2,24 +2,26 @@ export interface Warehouse {
     id: number;
     name: string;
     address: any;
+    synchronizationId: string;
     createdAt: string;
     updatedAt: string;
 }
 export interface ShipmentOrder {
-    id: number
-    originId: number
-    destinationId: number
-    status: string
-    createdAt: string
-    updatedAt: string
-    productsInShipmentOrders: ProductsInShipmentOrder[]
-    productsInBoxes: ProductsInShipmentOrder[]
+    id: number;
+    originId: number;
+    destinationId: number;
+    statusId: number;
+    createdAt: string;
+    updatedAt: string;
+    synchronizationId: string;
+    productsInShipmentOrders: ProductsInShipmentOrder[];
+    productsInBoxes: ProductsInShipmentOrder[];
 }
 
 export interface ProductsInShipmentOrder {
     id: number
     productId: number
-    shipmentOrder: number
+    shipmentOrderId: number
     units: number
     fulfilledBy: any
     isInTransportationBox: boolean
@@ -36,7 +38,6 @@ export interface Product {
     createdAt: string
     updatedAt: string
 }
-
 export interface TransportationBox {
     id: number
     name: string
@@ -50,5 +51,18 @@ export type AuxParameters = {
     isBox: boolean | null | undefined;
     showItems: boolean;
     handleClick: any;
-    item: ProductsInShipmentOrder;
+    item: ProductsInShipmentOrder | null;
 };
+
+export type ProductsInBoxes = {
+    transportationBoxId: number | undefined
+    products: ProductsInShipmentOrder[]
+}
+
+export interface OrderStatus {
+    id: number
+    name: string
+    synchronizationId: string
+    createdAt: string
+    updatedAt: string
+}

@@ -8,10 +8,11 @@ import * as schema from "@/db/schema";
 import { DatabaseHelper } from "@/db/database";
 import { useStorageState } from "@/auth/useStorageState";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Warehouse } from "@/types/types";
 
 export default function TabOneScreen() {
   const [localWarehouses, setLocalWarehouses] = React.useState<
-    schema.Warehouse[]
+    Warehouse[]
   >([]);
   const [warehouseId, setWarehouseId] = React.useState<string>("");
 
@@ -38,11 +39,9 @@ export default function TabOneScreen() {
   React.useEffect(() => {
     async function setup() {
       var db = new DatabaseHelper();
+      await db.syncWarehouses();
       const result = await db.getWarehouses();
       setLocalWarehouses(result);
-      db.syncWarehouses();
-      // setLocalWarehouses(result);
-      // db.dropDatabase();
     }
     setup();
   }, []);

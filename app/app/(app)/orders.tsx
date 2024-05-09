@@ -1,15 +1,15 @@
 import React from "react";
-import { StyleSheet, Pressable, Dimensions } from "react-native";
+import { StyleSheet, Pressable } from "react-native";
 
 import EditScreenInfo from "@/components/EditScreenInfo";
 import { Text, View, TextInput } from "@/components/Themed";
 import { FlashList } from "@shopify/flash-list";
 import { Link } from "expo-router";
 import { Stack } from "expo-router";
-import { useNavigation, useRouter, useLocalSearchParams } from "expo-router";
 import { DatabaseHelper } from "@/db/database";
-import * as schema from "@/db/schema";
 import { OrderStatus, ShipmentOrder, Warehouse } from "@/types/types";
+import { useWarehouseStore } from "@/Stores/warehouseStore";
+
 
 export default function TabOneScreen() {
   const [text, onChangeText] = React.useState("Nº Encomenda");
@@ -17,20 +17,22 @@ export default function TabOneScreen() {
   const [orders, setOrders] = React.useState<ShipmentOrder[]>([]);
   const [orderStatus, setOrderStatus] = React.useState<OrderStatus[]>([]);
   const [warehouse, setWarehouse] = React.useState<Warehouse>();
-  const params = useLocalSearchParams();
-  const { id } = params;
+  const { warehouseId, setWarehouseId } = useWarehouseStore();
 
   React.useEffect(() => {
     async function setup() {
       var db = new DatabaseHelper();
-      setWarehouse(await db.getWarehouse(parseInt(id.toString())));
-      db.syncShipmentOrders(parseInt(id.toString(), 10));
-      const result = await db.getShipmentOrders(parseInt(id.toString(), 10));
-      setOrderStatus(await db.getOrderStatus());
-      setOrders(result);
+      if (warehouseId) {
+        console.log("i", warehouseId);
+        setWarehouse(await db.getWarehouse(warehouseId));
+        db.syncShipmentOrders(warehouseId);
+        const result = await db.getShipmentOrders(warehouseId);
+        setOrderStatus(await db.getOrderStatus());
+        setOrders(result);
+      }
     }
     setup();
-  }, []);
+  }, [warehouseId]);
 
   return (
     <View style={styles.container}>
@@ -67,11 +69,7 @@ export default function TabOneScreen() {
                   <Pressable style={styles.list}>
                     <View style={{ flex: 4 }}>
                       <Text style={styles.title}>Encomenda {item.id}</Text>
-                      <Text
-                        style={styles.subTitle}
-                      >
-                        {item.createdAt}
-                      </Text>
+                      <Text style={styles.subTitle}>{item.createdAt}</Text>
                     </View>
                     <View style={{ flex: 2, justifyContent: "center" }}>
                       <Text style={styles.title}>

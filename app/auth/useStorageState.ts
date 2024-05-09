@@ -61,7 +61,6 @@ export function useStorageState(key: string): UseStateHook<string> {
   const setValue = React.useCallback(
     (value: string | null) => {
       setState(value);
-      // console.log("setStorageItemAsync", key, value)
       setStorageItemAsync(key, value);
     },
     [key]

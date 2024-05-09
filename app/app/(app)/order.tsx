@@ -1,4 +1,4 @@
-import { CameraView, useCameraPermissions } from "expo-camera/next";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import { useState } from "react";
 import { StyleSheet, Pressable, Vibration } from "react-native";
 import { FlashList } from "@shopify/flash-list";
@@ -36,6 +36,7 @@ const boxesAtom = atom<ProductsInBoxes[]>([]);
 function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
   const [readings, setReadings] = useAtom(readingsAtom);
   const [products, setProducts] = useAtom(productsAtom);
+  const [boxes, setBoxes] = useAtom(boxesAtom);
 
   if (!isBox && item) {
     let product = products.find(
@@ -49,8 +50,9 @@ function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
               var index = readings.findIndex((i) => i == item.product?.ean);
               if (index > -1) {
                 Vibration.vibrate(15);
-                // var copy = [...readings];
-                setReadings((p) => p.splice(index, 1));
+                let copy = [...readings];
+                copy.splice(index, 1);
+                setReadings(copy);
               }
             }}
             title={undefined}
@@ -62,7 +64,6 @@ function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
         <View style={{ marginLeft: 8 }}>
           <StyledButton
             onPress={() => {
-              console.log('Add')
               if (
                 item?.units &&
                 readings.filter((i) => i == item.product?.ean).length >=
@@ -74,7 +75,6 @@ function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
                   visibilityTime: 1750,
                 });
               } else {
-                console.log('Add 2')
                 if (item.product?.ean) {
                   setReadings([...readings, item.product?.ean]);
                   Vibration.vibrate(15);
@@ -101,59 +101,69 @@ function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
             }}
             title={undefined}
             variant="default"
-            icon={<FontAwesome name="shopping-basket" size={18} />}
+            icon={
+              item.isInTransportationBox ? (
+                <FontAwesome name="remove" size={18} />
+              ) : (
+                <FontAwesome name="shopping-basket" size={18} />
+              )
+            }
           />
         </View>
       </>
     );
   }
   if (showItems) {
+    //
+
     return (
       <>
         <StyledButton
           onPress={handleClick}
           title={undefined}
           variant="default"
-          icon={<FontAwesome name="chevron-down" size={20} />}
+          icon={
+            <FontAwesome
+              name={showItems ? "chevron-down" : "chevron-up"}
+              size={20}
+            />
+          }
         />
-      </>
-    );
-  } else {
-    return (
-      <>
-        <StyledButton
-          onPress={handleClick}
+        {/* <StyledButton
+          onPress={() => {
+            setBoxes([{ products: [], transportationBoxId: 4 }]);
+          }}
           title={undefined}
           variant="default"
-          icon={<FontAwesome name="chevron-up" size={20} />}
-        />
+          icon={
+            <FontAwesome
+              name="plus-circle"
+              size={20}
+            />
+          }
+        /> */}
       </>
     );
   }
 }
 
-function List(props: {
-  orders: ProductsInShipmentOrder[];
-  readings: String[];
-}) {
+function List() {
   const [showItems, setShowItems] = useState(true);
-  const colorScheme = useColorScheme();
+  const [products, setProducts] = useAtom(productsAtom);
   const [readings, setReadings] = useAtom(readingsAtom);
   const [boxes, setBoxes] = useAtom(boxesAtom);
 
   function handleClick() {
-    setShowItems(!showItems);
+    setShowItems(false);
   }
-  // var boxes: ProductsInBoxes[] = [];
-  // var notInBoxes: any[] = [];
 
   const notInBoxes = React.useMemo(() => {
-    return props.orders.filter((i) => i.isInTransportationBox == false);
-  }, [props.orders]);
+    return products.filter((i) => i.isInTransportationBox == false);
+  }, [products, readings]);
 
   const InBoxes = React.useMemo(() => {
-    var boxesHolder: ProductsInBoxes[] = [];
-    props.orders.forEach((element) => {
+    var boxesHolder: ProductsInBoxes[] = [...boxes];
+    products.forEach((element) => {
       if (element.isInTransportationBox) {
         let find = boxesHolder.find(
           (i) => i.transportationBoxId == element.transportationBoxId
@@ -169,13 +179,28 @@ function List(props: {
       }
     });
     return boxesHolder;
-  }, [props.orders]);
-
-  console.log(props.readings);
+  }, [products, readings, boxes]);
 
   return (
     <>
       <View style={{ flex: 1 }}>
+        {notInBoxes.length > 0 ? (
+          <>
+            <View style={{ marginTop: 8 }}>
+              <Text style={styles.heading} role="heading" aria-level="2">
+                Artigos
+              </Text>
+              <View
+                style={styles.separator}
+                lightColor="#eee"
+                darkColor="rgba(255,255,255,0.15)"
+              />
+            </View>
+          </>
+        ) : (
+          <View></View>
+        )}
+
         <FlashList
           data={notInBoxes}
           renderItem={({ item, index }) => {
@@ -192,11 +217,8 @@ function List(props: {
                     <Text style={styles.title}>{item.product?.name}</Text>
                     <Text style={styles.subTitle}>
                       Quantidade:{" "}
-                      {
-                        props.readings.filter((i) => i == item.product?.ean)
-                          .length
-                      }{" "}
-                      / {item.units}
+                      {readings.filter((i) => i == item.product?.ean).length} /{" "}
+                      {item.units}
                     </Text>
                     <Text style={styles.subTitle}>
                       EAN: {item.product?.ean}
@@ -223,7 +245,7 @@ function List(props: {
           }}
           estimatedItemSize={200}
         />
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 2 }}>
           {InBoxes.length > 0 ? (
             <>
               <View style={{ marginTop: 8 }}>
@@ -299,7 +321,7 @@ function List(props: {
                                     <Text style={styles.subTitle}>
                                       Quantidade:{" "}
                                       {
-                                        props.readings.filter(
+                                        readings.filter(
                                           (i) => i == item.product?.ean
                                         ).length
                                       }{" "}
@@ -548,17 +570,7 @@ export default function App() {
         <Text></Text>
       </CameraView>
       <View style={styles.container}>
-        <View style={{ marginTop: 8 }}>
-          <Text style={styles.heading} role="heading" aria-level="2">
-            Artigos
-          </Text>
-          <View
-            style={styles.separator}
-            lightColor="#eee"
-            darkColor="rgba(255,255,255,0.15)"
-          />
-        </View>
-        <List orders={products} readings={readings} />
+        <List />
         <ShowCompleteButton show={readAll} />
       </View>
     </View>

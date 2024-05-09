@@ -1,5 +1,5 @@
 import { drizzle } from "drizzle-orm/expo-sqlite";
-import { openDatabaseSync, deleteDatabaseAsync } from "expo-sqlite/next";
+import { openDatabaseSync, deleteDatabaseAsync } from "expo-sqlite";
 import * as schema from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
@@ -95,7 +95,6 @@ export class DatabaseHelper {
                         .where(eq(schema.shipmentOrders.id, shipmentOrderLocal.id))
 
                     shipmentOrder.productsInShipmentOrders.forEach(async (product) => {
-                        console.log('1', product)
                         // await this.db.insert(schema.productsInShipmentOrders).values(product);
                         await this.db.update(schema.productsInShipmentOrders)
                             .set({

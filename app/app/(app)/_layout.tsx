@@ -12,11 +12,10 @@ import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 import { useColorScheme } from "@/components/useColorScheme";
 import { RootSiblingParent } from "react-native-root-siblings";
 import { drizzle } from "drizzle-orm/expo-sqlite";
-import { openDatabaseSync } from "expo-sqlite/next";
-import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
-import migrations from "@/drizzle/migrations";
-import { View, Text, Button } from "react-native";
+import { openDatabaseSync } from "expo-sqlite";
+import { View, Text, Button, Appearance } from "react-native";
 import { useSession } from "@/auth/ctx";
+import { useDarkModeStore } from "@/Stores/darkModeStore";
 
 const expoDb = openDatabaseSync("db.db");
 const db = drizzle(expoDb);
@@ -72,6 +71,12 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
+  const { darkMode, setDarkMode } = useDarkModeStore();
+   if (darkMode) {
+     Appearance.setColorScheme("dark");
+   } else {
+     Appearance.setColorScheme("light");
+   }
   const colorScheme = useColorScheme();
 
   const toastConfig = {

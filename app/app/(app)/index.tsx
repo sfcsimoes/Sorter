@@ -9,32 +9,13 @@ import { DatabaseHelper } from "@/db/database";
 import { useStorageState } from "@/auth/useStorageState";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Warehouse } from "@/types/types";
+import { useWarehouseStore } from "@/Stores/warehouseStore";
 
 export default function TabOneScreen() {
   const [localWarehouses, setLocalWarehouses] = React.useState<
     Warehouse[]
   >([]);
-  const [warehouseId, setWarehouseId] = React.useState<string>("");
-
-  const storeData = async (value: string) => {
-    try {
-      setWarehouseId(value);
-      await AsyncStorage.setItem("warehouseId", value);
-    } catch (e) {
-      // saving error
-    }
-  };
-
-  const getData = async () => {
-    try {
-      const value = await AsyncStorage.getItem("warehouseId");
-      if (value !== null) {
-        setWarehouseId(value);
-      }
-    } catch (e) {
-      // error reading value
-    }
-  };
+  const { warehouseId, setWarehouseId } = useWarehouseStore();
 
   React.useEffect(() => {
     async function setup() {
@@ -45,8 +26,6 @@ export default function TabOneScreen() {
     }
     setup();
   }, []);
-
-  getData();
 
   if (warehouseId) {
     return (
@@ -80,7 +59,7 @@ export default function TabOneScreen() {
                 <Pressable
                   style={styles.list}
                   onPress={() => {
-                    setWarehouseId(item.id.toString());
+                    setWarehouseId(item.id);
                   }}
                 >
                   <View style={{ flex: 4 }}>

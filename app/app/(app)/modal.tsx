@@ -12,19 +12,18 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { MonoText } from "@/components/StyledText";
 import { Appearance } from "react-native";
 import { useSession } from "@/auth/ctx";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColorScheme } from "@/components/useColorScheme";
 import { Picker } from "@react-native-picker/picker";
 import { DatabaseHelper } from "@/db/database";
 import { Warehouse } from "@/types/types";
+import { useWarehouseStore } from "@/Stores/warehouseStore";
+import { useDarkModeStore } from "@/Stores/darkModeStore";
 
 function WarehousePicket(props: { iconColor: string }) {
   const pickerRef = useRef<any>();
-  const [warehouseId, setWarehouseId] = React.useState<string>("-1");
-  const [localWarehouses, setLocalWarehouses] = React.useState<
-    Warehouse[]
-  >([]);
+  const [localWarehouses, setLocalWarehouses] = React.useState<Warehouse[]>([]);
   const [warehouse, setWarehouse] = React.useState<string>("");
+  const { warehouseId, setWarehouseId } = useWarehouseStore();
 
   let dropDownIconColor =
     Appearance.getColorScheme() === "dark" ? "#000" : "#fff";
@@ -39,26 +38,6 @@ function WarehousePicket(props: { iconColor: string }) {
     pickerRef.current.blur();
   }
 
-  const storeData = async (value: string) => {
-    try {
-      await AsyncStorage.setItem("warehouseId", value);
-      setWarehouseId(value);
-    } catch (e) {
-      // saving error
-    }
-  };
-
-  const getData = async () => {
-    try {
-      const value = await AsyncStorage.getItem("warehouseId");
-      if (value !== null) {
-        setWarehouseId(value);
-      }
-    } catch (e) {
-      // error reading value
-    }
-  };
-
   React.useMemo(() => {
     async function setup() {
       var db = new DatabaseHelper();
@@ -70,15 +49,9 @@ function WarehousePicket(props: { iconColor: string }) {
   }, []);
 
   React.useEffect(() => {
-    var warehouseName = localWarehouses.find(
-      (i) => i.id.toString() == warehouseId
-    )?.name;
+    var warehouseName = localWarehouses.find((i) => i.id == warehouseId)?.name;
     setWarehouse(warehouseName || "");
-  }, [warehouseId]);
-
-  React.useMemo(() => {
-    getData();
-  }, []);
+  }, [warehouseId, localWarehouses]);
 
   return (
     <TouchableOpacity
@@ -105,8 +78,8 @@ function WarehousePicket(props: { iconColor: string }) {
         ref={pickerRef}
         selectedValue={warehouseId}
         dropdownIconColor={dropDownIconColor}
-        onValueChange={(itemValue, itemIndex) => {
-          if (itemValue) storeData(itemValue.toString());
+        onValueChange={(itemValue: any, itemIndex) => {
+          if (itemValue) setWarehouseId(itemValue);
         }}
       >
         <Picker.Item label="Options" />
@@ -134,14 +107,17 @@ export default function Modal() {
   });
   let isDarkMode = Appearance.getColorScheme() === "dark";
   let iconColor = isDarkMode ? "#fff" : "#000";
+  const { darkMode, setDarkMode } = useDarkModeStore();
 
-  function editTheme(darkMode: boolean) {
-    if (darkMode) {
+  function editTheme(darkModeActive: boolean) {
+    if (darkModeActive) {
+      setDarkMode(true);
       Appearance.setColorScheme("dark");
     } else {
+      setDarkMode(false);
       Appearance.setColorScheme("light");
     }
-    setForm({ ...form, darkMode });
+    setForm({ ...form, darkMode: darkModeActive });
   }
 
   return (

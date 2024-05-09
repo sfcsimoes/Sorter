@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db";
 import { z } from "zod";
 import { productsInShipmentOrders, shipmentOrders } from "@/server/db/schema";
-import { useParams } from 'next/navigation'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -14,6 +13,13 @@ export async function GET(request: NextRequest) {
         productsInShipmentOrders: true,
       },
       where: (shipmentOrders, { eq }) => eq(shipmentOrders.originId, parseFloat(id)),
+    });
+    return NextResponse.json(shipmentOrders);
+  }else{
+    const shipmentOrders = await db.query.shipmentOrders.findMany({
+      with: {
+        productsInShipmentOrders: true,
+      },
     });
     return NextResponse.json(shipmentOrders);
   }

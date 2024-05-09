@@ -95,7 +95,6 @@ export async function PUT(req: NextRequest, res: NextResponse) {
 
   await db.transaction(async (tx) => {
     try {
-      console.log(data)
       orderObject.parse(data);
 
       var shipmentOrderId = await tx.update(shipmentOrders)

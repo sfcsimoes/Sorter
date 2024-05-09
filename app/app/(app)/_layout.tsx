@@ -149,7 +149,10 @@ function RootLayoutNav() {
               ),
             }}
           />
-          <Stack.Screen name="modal" options={{ presentation: "modal", title: 'Settings' }} />
+          <Stack.Screen
+            name="modal"
+            options={{ presentation: "modal", title: "Settings" }}
+          />
         </Stack>
         <Toast config={toastConfig} />
       </RootSiblingParent>

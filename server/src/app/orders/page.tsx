@@ -230,7 +230,7 @@ export default function OrdersTable() {
   return (
     <div className="w-full space-y-1.5 p-6">
       <div className="flex items-center">
-        <h1 className="text-lg font-semibold md:text-2xl">Warehouses</h1>
+        <h1 className="text-lg font-semibold md:text-2xl">Orders</h1>
       </div>
       <div className="flex items-center py-4">
         {/* <AddOrder /> */}

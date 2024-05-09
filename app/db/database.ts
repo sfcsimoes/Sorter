@@ -5,6 +5,8 @@ import { eq } from "drizzle-orm";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import migrations from "@/drizzle/migrations.js";
 import { OrderStatus, Product, ProductsInShipmentOrder, ShipmentOrder, Warehouse } from "@/types/types";
+import { useWarehouseStore } from "@/Stores/warehouseStore";
+import { useServerConnectionStore } from "@/Stores/serverConnectionStore";
 
 export class DatabaseHelper {
     public db: any;
@@ -73,39 +75,41 @@ export class DatabaseHelper {
 
     async syncShipmentOrders(id: number) {
         var response = await fetch(process.env.EXPO_PUBLIC_API_URL + "/api/orders?id=" + id);
-        let result = JSON.parse(await response.text());
-        result.forEach(async (shipmentOrder: ShipmentOrder) => {
-            let shipmentOrderLocal = await this.db.query.shipmentOrders.findFirst({
-                where: eq(schema.shipmentOrders.id, shipmentOrder.id)
-            });
-            if (!shipmentOrderLocal) {
-                await this.db.insert(schema.shipmentOrders).values(shipmentOrder);
-
-                shipmentOrder.productsInShipmentOrders.forEach(async (product) => {
-                    await this.db.insert(schema.productsInShipmentOrders).values(product);
+        if(response.status == 200){
+            let result = JSON.parse(await response.text());
+            result.forEach(async (shipmentOrder: ShipmentOrder) => {
+                let shipmentOrderLocal = await this.db.query.shipmentOrders.findFirst({
+                    where: eq(schema.shipmentOrders.id, shipmentOrder.id)
                 });
-            } else {
-                if (shipmentOrderLocal.synchronizationId != shipmentOrder.synchronizationId) {
-                    await this.db.update(schema.shipmentOrders)
-                        .set({
-                            statusId: shipmentOrder.statusId,
-                            updatedAt: shipmentOrder.updatedAt,
-                            synchronizationId: shipmentOrder.synchronizationId
-                        })
-                        .where(eq(schema.shipmentOrders.id, shipmentOrderLocal.id))
+                if (!shipmentOrderLocal) {
+                    await this.db.insert(schema.shipmentOrders).values(shipmentOrder);
 
                     shipmentOrder.productsInShipmentOrders.forEach(async (product) => {
-                        // await this.db.insert(schema.productsInShipmentOrders).values(product);
-                        await this.db.update(schema.productsInShipmentOrders)
-                            .set({
-                                isInTransportationBox: product.isInTransportationBox,
-                                transportationBoxId: product.transportationBoxId,
-                            })
-                            .where(eq(schema.productsInShipmentOrders.id, product.id))
+                        await this.db.insert(schema.productsInShipmentOrders).values(product);
                     });
+                } else {
+                    if (shipmentOrderLocal.synchronizationId != shipmentOrder.synchronizationId) {
+                        await this.db.update(schema.shipmentOrders)
+                            .set({
+                                statusId: shipmentOrder.statusId,
+                                updatedAt: shipmentOrder.updatedAt,
+                                synchronizationId: shipmentOrder.synchronizationId
+                            })
+                            .where(eq(schema.shipmentOrders.id, shipmentOrderLocal.id))
+
+                        shipmentOrder.productsInShipmentOrders.forEach(async (product) => {
+                            // await this.db.insert(schema.productsInShipmentOrders).values(product);
+                            await this.db.update(schema.productsInShipmentOrders)
+                                .set({
+                                    isInTransportationBox: product.isInTransportationBox,
+                                    transportationBoxId: product.transportationBoxId,
+                                })
+                                .where(eq(schema.productsInShipmentOrders.id, product.id))
+                        });
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     async syncProducts() {

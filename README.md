@@ -8,6 +8,8 @@ cd server
 # install deps
 npm i
 
+# Create a local .env file, copy the values of the .env.exemple
+
 # initialize the database
 npm run db:start
 
@@ -26,6 +28,7 @@ npm i
 
 Create .env file with server/api URL such as
 
+Example
 ```env
 EXPO_PUBLIC_API_URL=http://192.168.1.64:3100
 ```

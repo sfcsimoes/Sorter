@@ -14,7 +14,12 @@ import {
   ProductsInShipmentOrder,
   ShipmentOrder,
 } from "@/types/types";
-import { Stack, useLocalSearchParams, router } from "expo-router";
+import {
+  Stack,
+  useLocalSearchParams,
+  router,
+  useNavigation,
+} from "expo-router";
 import { atom, useAtom } from "jotai";
 import { DatabaseHelper } from "@/db/database";
 
@@ -37,6 +42,33 @@ function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
   const [readings, setReadings] = useAtom(readingsAtom);
   const [products, setProducts] = useAtom(productsAtom);
   const [boxes, setBoxes] = useAtom(boxesAtom);
+
+  function AddToBox(props: { item: ProductsInShipmentOrder }) {
+    if (boxes.length > 0)
+      return (
+        <StyledButton
+          onPress={() => {
+            if (props.item.isInTransportationBox) {
+              props.item.isInTransportationBox = false;
+              props.item.transportationBoxId = 0;
+            } else {
+              props.item.isInTransportationBox = true;
+              props.item.transportationBoxId = boxes[0].transportationBoxId;
+            }
+            setProducts((p) => [...p]);
+          }}
+          title={undefined}
+          variant="default"
+          icon={
+            props.item.isInTransportationBox ? (
+              <FontAwesome name="remove" size={18} />
+            ) : (
+              <FontAwesome name="shopping-basket" size={18} />
+            )
+          }
+        />
+      );
+  }
 
   if (!isBox && item) {
     let product = products.find(
@@ -88,34 +120,11 @@ function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
         </View>
 
         <View style={{ marginLeft: 8 }}>
-          <StyledButton
-            onPress={() => {
-              if (item.isInTransportationBox) {
-                item.isInTransportationBox = false;
-                item.transportationBoxId = 0;
-              } else {
-                item.isInTransportationBox = true;
-                item.transportationBoxId = 3;
-              }
-              setProducts((p) => [...p]);
-            }}
-            title={undefined}
-            variant="default"
-            icon={
-              item.isInTransportationBox ? (
-                <FontAwesome name="remove" size={18} />
-              ) : (
-                <FontAwesome name="shopping-basket" size={18} />
-              )
-            }
-          />
+          <AddToBox item={item} />
         </View>
       </>
     );
-  }
-  if (showItems) {
-    //
-
+  } else {
     return (
       <>
         <StyledButton
@@ -129,19 +138,6 @@ function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
             />
           }
         />
-        {/* <StyledButton
-          onPress={() => {
-            setBoxes([{ products: [], transportationBoxId: 4 }]);
-          }}
-          title={undefined}
-          variant="default"
-          icon={
-            <FontAwesome
-              name="plus-circle"
-              size={20}
-            />
-          }
-        /> */}
       </>
     );
   }
@@ -162,7 +158,7 @@ function List() {
   }, [products, readings]);
 
   const InBoxes = React.useMemo(() => {
-    var boxesHolder: ProductsInBoxes[] = [...boxes];
+    var boxesHolder: ProductsInBoxes[] = [];
     products.forEach((element) => {
       if (element.isInTransportationBox) {
         let find = boxesHolder.find(
@@ -196,58 +192,61 @@ function List() {
                 darkColor="rgba(255,255,255,0.15)"
               />
             </View>
+            <FlashList
+              data={notInBoxes}
+              renderItem={({ item, index }) => {
+                return (
+                  <>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginTop: 2,
+                      }}
+                    >
+                      <View style={{ marginLeft: 2, flex: 6 }}>
+                        <Text style={styles.title}>{item.product?.name}</Text>
+                        <Text style={styles.subTitle}>
+                          Quantidade:{" "}
+                          {
+                            readings.filter((i) => i == item.product?.ean)
+                              .length
+                          }{" "}
+                          / {item.units}
+                        </Text>
+                        <Text style={styles.subTitle}>
+                          EAN: {item.product?.ean}
+                        </Text>
+                      </View>
+                      <View
+                        style={{ marginLeft: 2, flex: 4, flexDirection: "row" }}
+                      >
+                        <Options
+                          isBox={item.isInTransportationBox}
+                          showItems={showItems}
+                          handleClick={handleClick}
+                          item={item}
+                        />
+                      </View>
+                    </View>
+                    <View
+                      style={styles.separator}
+                      lightColor="#eee"
+                      darkColor="rgba(255,255,255,0.15)"
+                    />
+                  </>
+                );
+              }}
+              estimatedItemSize={200}
+            />
           </>
         ) : (
           <View></View>
         )}
 
-        <FlashList
-          data={notInBoxes}
-          renderItem={({ item, index }) => {
-            return (
-              <>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    marginTop: 2,
-                  }}
-                >
-                  <View style={{ marginLeft: 2, flex: 6 }}>
-                    <Text style={styles.title}>{item.product?.name}</Text>
-                    <Text style={styles.subTitle}>
-                      Quantidade:{" "}
-                      {readings.filter((i) => i == item.product?.ean).length} /{" "}
-                      {item.units}
-                    </Text>
-                    <Text style={styles.subTitle}>
-                      EAN: {item.product?.ean}
-                    </Text>
-                  </View>
-                  <View
-                    style={{ marginLeft: 2, flex: 4, flexDirection: "row" }}
-                  >
-                    <Options
-                      isBox={item.isInTransportationBox}
-                      showItems={showItems}
-                      handleClick={handleClick}
-                      item={item}
-                    />
-                  </View>
-                </View>
-                <View
-                  style={styles.separator}
-                  lightColor="#eee"
-                  darkColor="rgba(255,255,255,0.15)"
-                />
-              </>
-            );
-          }}
-          estimatedItemSize={200}
-        />
-        <View style={{ flex: 2 }}>
-          {InBoxes.length > 0 ? (
-            <>
+        {InBoxes.length > 0 ? (
+          <>
+            <View style={{ flex: 1 }}>
               <View style={{ marginTop: 8 }}>
                 <Text style={styles.heading} role="heading" aria-level="2">
                   Artigos em Caixas
@@ -258,116 +257,119 @@ function List() {
                   darkColor="rgba(255,255,255,0.15)"
                 />
               </View>
-            </>
-          ) : (
-            <View></View>
-          )}
-
-          <FlashList
-            nestedScrollEnabled={true}
-            data={InBoxes}
-            renderItem={({ item, index }) => {
-              return (
-                <>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      marginTop: 2,
-                    }}
-                  >
-                    <View style={{ marginLeft: 2, flex: 4 }}>
-                      <Text style={styles.title}>
-                        Caixa {item.transportationBoxId}
-                      </Text>
-                    </View>
-                    <View
-                      style={{ marginLeft: 2, flex: 2, flexDirection: "row" }}
-                    >
-                      <Options
-                        isBox={true}
-                        showItems={showItems}
-                        handleClick={handleClick}
-                        item={null}
-                      />
-                    </View>
-                  </View>
-                  <View
-                    style={styles.separator}
-                    lightColor="#eee"
-                    darkColor="rgba(255,255,255,0.15)"
-                  />
-                  {showItems ? (
+              <FlashList
+                nestedScrollEnabled={true}
+                data={InBoxes}
+                renderItem={({ item, index }) => {
+                  return (
                     <>
-                      <View style={{ minHeight: 100 }}>
-                        <FlashList
-                          nestedScrollEnabled={true}
-                          data={item.products}
-                          renderItem={({ item, index }) => {
-                            return (
-                              <>
-                                <View
-                                  style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    marginTop: 2,
-                                    marginLeft: 18,
-                                  }}
-                                >
-                                  <View style={{ marginLeft: 2, flex: 6 }}>
-                                    <Text style={styles.title}>
-                                      {item.product.name}
-                                    </Text>
-                                    <Text style={styles.subTitle}>
-                                      Quantidade:{" "}
-                                      {
-                                        readings.filter(
-                                          (i) => i == item.product?.ean
-                                        ).length
-                                      }{" "}
-                                      / {item.units}
-                                    </Text>
-                                    <Text style={styles.subTitle}>
-                                      EAN: {item.product.ean}
-                                    </Text>
-                                  </View>
-                                  <View
-                                    style={{
-                                      marginLeft: 2,
-                                      flex: 4,
-                                      flexDirection: "row",
-                                    }}
-                                  >
-                                    <Options
-                                      isBox={false}
-                                      showItems={showItems}
-                                      handleClick={handleClick}
-                                      item={item}
-                                    />
-                                  </View>
-                                </View>
-
-                                <View
-                                  style={styles.separator}
-                                  lightColor="#eee"
-                                  darkColor="rgba(255,255,255,0.15)"
-                                />
-                              </>
-                            );
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          marginTop: 2,
+                        }}
+                      >
+                        <View style={{ marginLeft: 2, flex: 4 }}>
+                          <Text style={styles.title}>
+                            Caixa {item.transportationBoxId}
+                          </Text>
+                        </View>
+                        <View
+                          style={{
+                            marginLeft: 2,
+                            flex: 2,
+                            flexDirection: "row",
                           }}
-                          estimatedItemSize={200}
-                        />
+                        >
+                          <Options
+                            isBox={true}
+                            showItems={showItems}
+                            handleClick={handleClick}
+                            item={null}
+                          />
+                        </View>
                       </View>
+                      <View
+                        style={styles.separator}
+                        lightColor="#eee"
+                        darkColor="rgba(255,255,255,0.15)"
+                      />
+                      {showItems ? (
+                        <>
+                          <View style={{ minHeight: 100 }}>
+                            <FlashList
+                              nestedScrollEnabled={true}
+                              data={item.products}
+                              renderItem={({ item, index }) => {
+                                return (
+                                  <>
+                                    <View
+                                      style={{
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        marginTop: 2,
+                                        marginLeft: 18,
+                                      }}
+                                    >
+                                      <View style={{ marginLeft: 2, flex: 6 }}>
+                                        <Text style={styles.title}>
+                                          {item.product.name}
+                                        </Text>
+                                        <Text style={styles.subTitle}>
+                                          Quantidade:{" "}
+                                          {
+                                            readings.filter(
+                                              (i) => i == item.product?.ean
+                                            ).length
+                                          }{" "}
+                                          / {item.units}
+                                        </Text>
+                                        <Text style={styles.subTitle}>
+                                          EAN: {item.product.ean}
+                                        </Text>
+                                      </View>
+                                      <View
+                                        style={{
+                                          marginLeft: 2,
+                                          flex: 4,
+                                          flexDirection: "row",
+                                        }}
+                                      >
+                                        <Options
+                                          isBox={false}
+                                          showItems={showItems}
+                                          handleClick={handleClick}
+                                          item={item}
+                                        />
+                                      </View>
+                                    </View>
+
+                                    <View
+                                      style={styles.separator}
+                                      lightColor="#eee"
+                                      darkColor="rgba(255,255,255,0.15)"
+                                    />
+                                  </>
+                                );
+                              }}
+                              estimatedItemSize={200}
+                            />
+                          </View>
+                        </>
+                      ) : (
+                        <View></View>
+                      )}
                     </>
-                  ) : (
-                    <View></View>
-                  )}
-                </>
-              );
-            }}
-            estimatedItemSize={200}
-          />
-        </View>
+                  );
+                }}
+                estimatedItemSize={200}
+              />
+            </View>
+          </>
+        ) : (
+          <View></View>
+        )}
       </View>
     </>
   );
@@ -448,6 +450,20 @@ export default function App() {
     [readings, totalOrderUnits]
   );
 
+  // Navigation
+  const navigation = useNavigation();
+
+  // Effect
+  React.useEffect(() => {
+    navigation.addListener("beforeRemove", (e) => {
+      e.preventDefault();
+      // Do your stuff here
+      setReadings([]);
+      setBoxes([]);
+      navigation.dispatch(e.data.action);
+    });
+  }, []);
+
   // React.useEffect(() => {
   //   fetch(process.env.EXPO_PUBLIC_API_URL + "/api/order?id=2")
   //     .then((resp) => resp.json())
@@ -495,9 +511,16 @@ export default function App() {
 
   const handleBarCodeScanned = (props: { type: any; data: any }) => {
     let ean = "";
+    let isBox = false;
+    let id = 0;
     switch (props.type) {
       case 256:
-        ean = JSON.parse(props.data).ean;
+        var json = JSON.parse(props.data);
+        ean = json.ean;
+        if (json.isBox) {
+          isBox = json.isBox;
+          id = json.id;
+        }
         break;
       case 32:
         ean = props.data.slice(0, props.data.length - 1);
@@ -513,16 +536,19 @@ export default function App() {
       return;
     }
 
+    if (isBox) {
+      var find = boxes.find((i) => i.transportationBoxId == id);
+      if (!find) {
+        setBoxes([{ products: [], transportationBoxId: id }]);
+      }
+      return;
+    }
+
     var product = products.find((i: any) => i.product?.ean == ean);
+    
+    setHasScanned(true);
 
     if (product == null || product == undefined) {
-      setBoxes((oldBox) => [
-        ...oldBox,
-        {
-          transportationBoxId: 3,
-          products: [],
-        },
-      ]);
       Toast.show({
         type: "error",
         text1: "Artigo nao esta no pedido",
@@ -530,7 +556,6 @@ export default function App() {
       });
       return;
     }
-    setHasScanned(true);
 
     if (
       product?.units &&

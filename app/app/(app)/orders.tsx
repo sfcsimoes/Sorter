@@ -4,7 +4,7 @@ import { StyleSheet, Pressable } from "react-native";
 import EditScreenInfo from "@/components/EditScreenInfo";
 import { Text, View, TextInput } from "@/components/Themed";
 import { FlashList } from "@shopify/flash-list";
-import { Link } from "expo-router";
+import { Link, useNavigation } from "expo-router";
 import { Stack } from "expo-router";
 import { DatabaseHelper } from "@/db/database";
 import { OrderStatus, ShipmentOrder, Warehouse } from "@/types/types";
@@ -23,7 +23,6 @@ export default function TabOneScreen() {
     async function setup() {
       var db = new DatabaseHelper();
       if (warehouseId) {
-        console.log("i", warehouseId);
         setWarehouse(await db.getWarehouse(warehouseId));
         db.syncShipmentOrders(warehouseId);
         const result = await db.getShipmentOrders(warehouseId);

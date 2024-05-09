@@ -8,6 +8,8 @@ cd server
 # install deps
 npm i
 
+Create .env file to the server, justo copy and paste the exist one and change tha name to ".env" 
+
 # initialize the database
 npm run db:start
 

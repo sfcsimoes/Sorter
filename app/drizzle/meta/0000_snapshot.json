@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "43343611-3238-4c8f-a244-c2a55f58897a",
+  "id": "2c87fa3a-aa67-44f7-b40d-268eccceb960",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "orderStatus": {
@@ -12,7 +12,7 @@
           "type": "integer",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "name": {
           "name": "name",
@@ -58,7 +58,7 @@
           "type": "integer",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "name": {
           "name": "name",
@@ -118,7 +118,7 @@
           "type": "integer",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "shipmentOrderId": {
           "name": "shipmentOrderId",
@@ -229,7 +229,7 @@
           "type": "integer",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "originId": {
           "name": "originId",
@@ -321,6 +321,50 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
+    "syncOrders": {
+      "name": "syncOrders",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "shipmentOrderId": {
+          "name": "shipmentOrderId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "synced": {
+          "name": "synced",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "syncOrders_shipmentOrderId_shipmentOrders_id_fk": {
+          "name": "syncOrders_shipmentOrderId_shipmentOrders_id_fk",
+          "tableFrom": "syncOrders",
+          "tableTo": "shipmentOrders",
+          "columnsFrom": [
+            "shipmentOrderId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "users": {
       "name": "users",
       "columns": {
@@ -329,7 +373,7 @@
           "type": "integer",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "name": {
           "name": "name",
@@ -389,7 +433,7 @@
           "type": "integer",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "name": {
           "name": "name",

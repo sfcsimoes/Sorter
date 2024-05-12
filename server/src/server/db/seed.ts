@@ -37,6 +37,16 @@ await db.insert(warehouses).values([
     address:
       "Shopping Via Catarina - Loja 1.20, Rua Santa Catarina 312 4000-433",
   },
+  {
+    name: "Worten - Lousã",
+    address:
+      "Av. Dr. José Maria Cardoso, 3200-254 Lousã",
+  },
+  {
+    name: "Worten - Figueira da Foz",
+    address:
+      "Av. Prof. Dr. Bissaya Barreto, 3080-897 Figueira da Foz",
+  },
 ]);
 
 await db.insert(products).values([
@@ -51,8 +61,28 @@ await db.insert(products).values([
     isTransportationBox: false,
   },
   {
-    name: "Caixa 1",
+    name: "Playstation 5",
     ean: "30000000000",
+    isTransportationBox: false,
+  },
+  {
+    name: "Iphone 15",
+    ean: "40000000000",
+    isTransportationBox: false,
+  },
+  {
+    name: "Caixa 1",
+    ean: "99100000000",
+    isTransportationBox: true,
+  },
+  {
+    name: "Caixa 2",
+    ean: "99200000000",
+    isTransportationBox: true,
+  },
+  {
+    name: "Caixa 3",
+    ean: "99300000000",
     isTransportationBox: true,
   },
 ]);

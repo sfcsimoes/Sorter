@@ -1,4 +1,5 @@
-import Link from "next/link";
+"use client";
+
 import {
   Activity,
   ArrowUpRight,
@@ -6,10 +7,6 @@ import {
   DollarSign,
   Users,
 } from "lucide-react";
-
-// import { CreatePost } from "@/app/_components/create-post";
-import { getServerAuthSession } from "@/server/auth";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,9 +26,58 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export default async function Home() {
-  // const hello = await api.post.hello({ text: "from tRPC" });
-  const session = await getServerAuthSession();
+import * as React from "react";
+import Link from "next/link";
+import { atom, useAtom } from "jotai";
+import { Order, OrderStatus, Warehouse } from "@/types";
+import { getServerAuthSession } from "@/server/auth";
+
+const warehousesAtom = atom<Warehouse[]>([]);
+const orderStatusAtom = atom<OrderStatus[]>([]);
+
+export default function Home() {
+  // const session = await getServerAuthSession();
+  const [data, setData] = React.useState<Order[]>([]);
+  const [warehouses, setWarehouses] = useAtom(warehousesAtom);
+  const [orderStatusList, setOrderStatusList] = useAtom(orderStatusAtom);
+
+  React.useEffect(() => {
+    fetch("/api/orders")
+      .then((res) => res.json())
+      .then((d) => {
+        setData(d);
+      })
+      .catch((error) => console.log(error));
+  }, []);
+
+  React.useEffect(() => {
+    fetch("/api/warehouses")
+      .then((res) => res.json())
+      .then((d) => {
+        setWarehouses(d);
+      })
+      .catch((error) => console.log(error));
+  }, []);
+
+  React.useEffect(() => {
+    fetch("/api/orderStatus")
+      .then((res) => res.json())
+      .then((json) => {
+        setOrderStatusList(json);
+      })
+      .catch((error) => console.log(error));
+  }, []);
+
+  function badgeStyle(type: string) {
+    switch (type) {
+      case "1":
+        return "secondary";
+      case "2":
+        return "outline";
+      case "3":
+        return "outline";
+    }
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -94,13 +140,11 @@ export default async function Home() {
           <Card className="xl:col-span-2" x-chunk="dashboard-01-chunk-4">
             <CardHeader className="flex flex-row items-center">
               <div className="grid gap-2">
-                <CardTitle>Transactions</CardTitle>
-                <CardDescription>
-                  Recent transactions from your store.
-                </CardDescription>
+                <CardTitle>Orders</CardTitle>
+                <CardDescription>Recent orders.</CardDescription>
               </div>
               <Button asChild size="sm" className="ml-auto gap-1">
-                <Link href="#">
+                <Link href="/orders">
                   View All
                   <ArrowUpRight className="h-4 w-4" />
                 </Link>
@@ -110,120 +154,46 @@ export default async function Home() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Customer</TableHead>
-                    <TableHead className="hidden xl:table-column">
-                      Type
-                    </TableHead>
-                    <TableHead className="hidden xl:table-column">
-                      Status
-                    </TableHead>
-                    <TableHead className="hidden xl:table-column">
-                      Date
-                    </TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>Id</TableHead>
+                    <TableHead>Origin</TableHead>
+                    <TableHead>Destination</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow>
-                    <TableCell>
-                      <div className="font-medium">Liam Johnson</div>
-                      <div className="hidden text-sm text-muted-foreground md:inline">
-                        liam@example.com
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden xl:table-column">
-                      Sale
-                    </TableCell>
-                    <TableCell className="hidden xl:table-column">
-                      <Badge className="text-xs" variant="outline">
-                        Approved
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
-                      2023-06-23
-                    </TableCell>
-                    <TableCell className="text-right">$250.00</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>
-                      <div className="font-medium">Olivia Smith</div>
-                      <div className="hidden text-sm text-muted-foreground md:inline">
-                        olivia@example.com
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden xl:table-column">
-                      Refund
-                    </TableCell>
-                    <TableCell className="hidden xl:table-column">
-                      <Badge className="text-xs" variant="outline">
-                        Declined
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
-                      2023-06-24
-                    </TableCell>
-                    <TableCell className="text-right">$150.00</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>
-                      <div className="font-medium">Noah Williams</div>
-                      <div className="hidden text-sm text-muted-foreground md:inline">
-                        noah@example.com
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden xl:table-column">
-                      Subscription
-                    </TableCell>
-                    <TableCell className="hidden xl:table-column">
-                      <Badge className="text-xs" variant="outline">
-                        Approved
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
-                      2023-06-25
-                    </TableCell>
-                    <TableCell className="text-right">$350.00</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>
-                      <div className="font-medium">Emma Brown</div>
-                      <div className="hidden text-sm text-muted-foreground md:inline">
-                        emma@example.com
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden xl:table-column">
-                      Sale
-                    </TableCell>
-                    <TableCell className="hidden xl:table-column">
-                      <Badge className="text-xs" variant="outline">
-                        Approved
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
-                      2023-06-26
-                    </TableCell>
-                    <TableCell className="text-right">$450.00</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>
-                      <div className="font-medium">Liam Johnson</div>
-                      <div className="hidden text-sm text-muted-foreground md:inline">
-                        liam@example.com
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden xl:table-column">
-                      Sale
-                    </TableCell>
-                    <TableCell className="hidden xl:table-column">
-                      <Badge className="text-xs" variant="outline">
-                        Approved
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
-                      2023-06-27
-                    </TableCell>
-                    <TableCell className="text-right">$550.00</TableCell>
-                  </TableRow>
+                  {data.map((row) => (
+                    <TableRow>
+                      <TableCell>
+                        <div className="font-medium">{row.id}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">
+                          {warehouses.find((i) => i.id == row.originId)?.name}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">
+                          {
+                            warehouses.find((i) => i.id == row.destinationId)
+                              ?.name
+                          }
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">
+                          <Badge
+                            className="text-xs"
+                            variant={badgeStyle(row.statusId)}
+                          >
+                            {
+                              orderStatusList.find((i) => i.id == row.statusId)
+                                ?.name
+                            }
+                          </Badge>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </CardContent>

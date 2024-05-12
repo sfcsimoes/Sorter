@@ -2,12 +2,11 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { useState } from "react";
 import { StyleSheet, Pressable, Vibration } from "react-native";
 import { FlashList } from "@shopify/flash-list";
-import { Text, View } from "@/components/Themed";
+import { Text, View, TextInput } from "@/components/Themed";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useColorScheme } from "@/components/useColorScheme";
 import React from "react";
 import Toast from "react-native-toast-message";
-import StyledButton from "@/components/StyledButtont";
+import StyledButton from "@/components/StyledButton";
 import {
   AuxParameters,
   ProductsInBoxes,
@@ -22,6 +21,7 @@ import {
 } from "expo-router";
 import { atom, useAtom } from "jotai";
 import { DatabaseHelper } from "@/db/database";
+import { DangerAlert } from "@/components/DangerAlert";
 
 const productsAtom = atom<ProductsInShipmentOrder[]>([]);
 const shipmentOrderAtom = atom<ShipmentOrder>({
@@ -37,14 +37,16 @@ const shipmentOrderAtom = atom<ShipmentOrder>({
 });
 const readingsAtom = atom<string[]>([]);
 const boxesAtom = atom<ProductsInBoxes[]>([]);
+const haveBoxesAtom = atom<boolean>(false);
 
 function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
   const [readings, setReadings] = useAtom(readingsAtom);
   const [products, setProducts] = useAtom(productsAtom);
   const [boxes, setBoxes] = useAtom(boxesAtom);
+  const [haveBoxes, setHaveBoxes] = useAtom(haveBoxesAtom);
 
   function AddToBox(props: { item: ProductsInShipmentOrder }) {
-    if (boxes.length > 0)
+    if (haveBoxes)
       return (
         <StyledButton
           onPress={() => {
@@ -125,37 +127,55 @@ function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
       </>
     );
   } else {
-    return (
-      <>
-        <StyledButton
-          onPress={handleClick}
-          title={undefined}
-          variant="default"
-          icon={
-            <FontAwesome
-              name={showItems ? "chevron-down" : "chevron-up"}
-              size={20}
-            />
-          }
-        />
-      </>
-    );
+    if (showItems) {
+      return (
+        <>
+          <StyledButton
+            onPress={handleClick}
+            title={undefined}
+            variant="default"
+            icon={<FontAwesome name="chevron-down" size={20} />}
+          />
+        </>
+      );
+    } else {
+      return (
+        <>
+          <StyledButton
+            onPress={handleClick}
+            title={undefined}
+            variant="default"
+            icon={<FontAwesome name="chevron-up" size={20} />}
+          />
+        </>
+      );
+    }
   }
 }
 
 function List() {
-  const [showItems, setShowItems] = useState(true);
   const [products, setProducts] = useAtom(productsAtom);
   const [readings, setReadings] = useAtom(readingsAtom);
   const [boxes, setBoxes] = useAtom(boxesAtom);
+  const [haveBoxes, setHaveBoxes] = useAtom(haveBoxesAtom);
+  const [showItems, setShowItems] = useState(true);
 
   function handleClick() {
-    setShowItems(false);
+    setShowItems(!showItems);
   }
+
+  setHaveBoxes(
+    React.useMemo(() => {
+      return (
+        products.filter((i) => i.isInTransportationBox == true).length > 0 ||
+        boxes.length > 0
+      );
+    }, [products, boxes])
+  );
 
   const notInBoxes = React.useMemo(() => {
     return products.filter((i) => i.isInTransportationBox == false);
-  }, [products, readings]);
+  }, [products, readings, showItems]);
 
   const InBoxes = React.useMemo(() => {
     var boxesHolder: ProductsInBoxes[] = [];
@@ -175,7 +195,7 @@ function List() {
       }
     });
     return boxesHolder;
-  }, [products, readings, boxes]);
+  }, [products, readings, boxes, showItems]);
 
   return (
     <>
@@ -380,44 +400,49 @@ function ShowCompleteButton(props: { show: Boolean }) {
   const [shipmentOrder, setShipmentOrder] = useAtom(shipmentOrderAtom);
 
   async function finishOrder() {
-    try {
-      let request = await fetch(
-        process.env.EXPO_PUBLIC_API_URL + "/api/order",
-        {
-          method: "PUT",
-          body: JSON.stringify({
-            id: shipmentOrder.id,
-            originId: shipmentOrder.originId,
-            destinationId: shipmentOrder.destinationId,
-            statusId: 2,
-            products: products.map(
-              ({
-                id,
-                shipmentOrderId,
-                productId,
-                units,
-                isInTransportationBox,
-                transportationBoxId,
-              }) => ({
-                id,
-                shipmentOrderId,
-                productId,
-                units,
-                isInTransportationBox,
-                transportationBoxId,
-              })
-            ),
-          }),
-        }
-      );
-      if (request.status == 200) {
-        router.back();
-      } else {
-        throw "Erro";
-      }
-    } catch (e) {
-      console.log(e);
-    }
+    let db = new DatabaseHelper();
+    shipmentOrder.statusId = 2;
+    shipmentOrder.productsInShipmentOrders = products;
+    db.updateShipmentOrders(shipmentOrder);
+    router.back();
+    //   try {
+    //     let request = await fetch(
+    //       process.env.EXPO_PUBLIC_API_URL + "/api/order",
+    //       {
+    //         method: "PUT",
+    //         body: JSON.stringify({
+    //           id: shipmentOrder.id,
+    //           originId: shipmentOrder.originId,
+    //           destinationId: shipmentOrder.destinationId,
+    //           statusId: 2,
+    //           products: products.map(
+    //             ({
+    //               id,
+    //               shipmentOrderId,
+    //               productId,
+    //               units,
+    //               isInTransportationBox,
+    //               transportationBoxId,
+    //             }) => ({
+    //               id,
+    //               shipmentOrderId,
+    //               productId,
+    //               units,
+    //               isInTransportationBox,
+    //               transportationBoxId,
+    //             })
+    //           ),
+    //         }),
+    //       }
+    //     );
+    //     if (request.status == 200) {
+    //       router.back();
+    //     } else {
+    //       throw "Erro";
+    //     }
+    //   } catch (e) {
+    //     console.log(e);
+    //   }
   }
 
   if (props.show) {
@@ -464,16 +489,6 @@ export default function App() {
     });
   }, []);
 
-  // React.useEffect(() => {
-  //   fetch(process.env.EXPO_PUBLIC_API_URL + "/api/order?id=2")
-  //     .then((resp) => resp.json())
-  //     .then((json: ShipmentOrder) => {
-  //       // setProducts(json.productsInShipmentOrders);
-  //     })
-  //     .catch((error) => console.error(error));
-  //   // .finally(() => setLoading(false));
-  // });
-
   React.useEffect(() => {
     async function setup() {
       let db = new DatabaseHelper();
@@ -485,6 +500,18 @@ export default function App() {
           parseInt(id.toString())
         );
         setProducts(products);
+
+        products
+          .filter((i: any) => i.isInTransportationBox == true)
+          .forEach((z: any) => {
+            if (
+              !boxes.find((i) => i.transportationBoxId == z.transportationBoxId)
+            ) {
+              setBoxes([
+                { products: [], transportationBoxId: z.transportationBoxId },
+              ]);
+            }
+          });
       }
     }
     setup();
@@ -545,7 +572,7 @@ export default function App() {
     }
 
     var product = products.find((i: any) => i.product?.ean == ean);
-    
+
     setHasScanned(true);
 
     if (product == null || product == undefined) {
@@ -587,6 +614,8 @@ export default function App() {
           title: "Encomenda " + id,
         }}
       />
+      <DangerAlert body="Sem ligação ao sorter." />
+
       <CameraView
         style={styles.camera}
         barcodeScannerSettings={{ barcodeTypes: ["qr", "ean13"] }}
@@ -627,7 +656,6 @@ const styles = StyleSheet.create({
   },
   subTitle: {
     fontSize: 16,
-    color: "rgba(255,255,255,0.7)",
   },
   separator: {
     marginVertical: 10,

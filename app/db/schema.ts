@@ -80,6 +80,7 @@ export const shipmentOrders = createTable('shipmentOrders', {
 
 export const shipmentOrdersRelations = relations(shipmentOrders, ({ one, many }) => ({
 	productsInShipmentOrders: many(productsInShipmentOrders),
+	syncOrders: many(syncOrders),
 	originId: one(warehouses, {
 		fields: [shipmentOrders.originId],
 		references: [warehouses.id],
@@ -118,3 +119,18 @@ export const productsInShipmentOrdersRelations = relations(productsInShipmentOrd
 		references: [products.id],
 	}),
 }));
+
+
+export const syncOrders = createTable('syncOrders', {
+	id: int('id', { mode: 'number' }).primaryKey(),
+	shipmentOrderId: int('shipmentOrderId').references(() => shipmentOrders.id),
+	synced: text('synced'),
+});
+
+export const syncOrdersRelations = relations(syncOrders, ({ one }) => ({
+	shipmentOrders: one(shipmentOrders, {
+		fields: [syncOrders.shipmentOrderId],
+		references: [shipmentOrders.id],
+	}),
+}));
+

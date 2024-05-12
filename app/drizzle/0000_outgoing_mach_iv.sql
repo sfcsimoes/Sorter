@@ -1,5 +1,5 @@
 CREATE TABLE `orderStatus` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`id` integer PRIMARY KEY NOT NULL,
 	`name` text,
 	`synchronizationId` text,
 	`createdAt` text DEFAULT (CURRENT_TIMESTAMP),
@@ -7,7 +7,7 @@ CREATE TABLE `orderStatus` (
 );
 --> statement-breakpoint
 CREATE TABLE `products` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`id` integer PRIMARY KEY NOT NULL,
 	`name` text,
 	`ean` text,
 	`isTransportationBox` integer,
@@ -17,7 +17,7 @@ CREATE TABLE `products` (
 );
 --> statement-breakpoint
 CREATE TABLE `productsInShipmentOrders` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`id` integer PRIMARY KEY NOT NULL,
 	`shipmentOrderId` integer,
 	`productId` integer,
 	`units` integer,
@@ -31,7 +31,7 @@ CREATE TABLE `productsInShipmentOrders` (
 );
 --> statement-breakpoint
 CREATE TABLE `shipmentOrders` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`id` integer PRIMARY KEY NOT NULL,
 	`originId` integer,
 	`destinationId` integer,
 	`statusId` integer,
@@ -43,8 +43,15 @@ CREATE TABLE `shipmentOrders` (
 	FOREIGN KEY (`statusId`) REFERENCES `orderStatus`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE TABLE `syncOrders` (
+	`id` integer PRIMARY KEY NOT NULL,
+	`shipmentOrderId` integer,
+	`synced` text,
+	FOREIGN KEY (`shipmentOrderId`) REFERENCES `shipmentOrders`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
 CREATE TABLE `users` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`id` integer PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`email` text NOT NULL,
 	`password` text NOT NULL,
@@ -54,7 +61,7 @@ CREATE TABLE `users` (
 );
 --> statement-breakpoint
 CREATE TABLE `warehouses` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`id` integer PRIMARY KEY NOT NULL,
 	`name` text,
 	`address` text,
 	`synchronizationId` text,

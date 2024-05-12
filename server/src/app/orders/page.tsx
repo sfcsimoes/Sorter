@@ -14,24 +14,17 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import {
-  ArrowUpDown,
-  ChevronDown,
   ListFilter,
-  MoreHorizontal,
   PlusCircle,
   Loader2,
-  Check,
-  ChevronsUpDown,
   Edit2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -132,37 +125,37 @@ export const columns: ColumnDef<Order>[] = [
       <div className="capitalize">{row.getValue("updatedAt")}</div>
     ),
   },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const orderItem = row.original;
-      const [openSheet, setSheetOpen] = useAtom(sheetUpdateAtom);
-      const [order, setWarehouse] = useAtom(orderAtom);
+  // {
+  //   id: "actions",
+  //   enableHiding: false,
+  //   cell: ({ row }) => {
+  //     const orderItem = row.original;
+  //     const [openSheet, setSheetOpen] = useAtom(sheetUpdateAtom);
+  //     const [order, setWarehouse] = useAtom(orderAtom);
 
-      return (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  setSheetOpen(true);
-                  setWarehouse(orderItem);
-                }}
-              >
-                <Edit2 className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Edit</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      );
-    },
-  },
+  //     return (
+  //       <TooltipProvider>
+  //         <Tooltip>
+  //           <TooltipTrigger asChild>
+  //             <Button
+  //               variant="outline"
+  //               size="icon"
+  //               onClick={() => {
+  //                 setSheetOpen(true);
+  //                 setWarehouse(orderItem);
+  //               }}
+  //             >
+  //               <Edit2 className="h-4 w-4" />
+  //             </Button>
+  //           </TooltipTrigger>
+  //           <TooltipContent>
+  //             <p>Edit</p>
+  //           </TooltipContent>
+  //         </Tooltip>
+  //       </TooltipProvider>
+  //     );
+  //   },
+  // },
 ];
 
 export default function OrdersTable() {

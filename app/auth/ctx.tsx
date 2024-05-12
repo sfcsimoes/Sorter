@@ -2,12 +2,12 @@ import React from "react";
 import { useStorageState } from "./useStorageState";
 
 const AuthContext = React.createContext<{
-  signIn: () => void;
+  signIn: (email: string, password: string) => Promise<boolean>;
   signOut: () => void;
   session?: string | null;
   isLoading: boolean;
 }>({
-  signIn: () => null,
+  signIn: async (email: string, password: string) => true,
   signOut: () => null,
   session: null,
   isLoading: false,
@@ -31,9 +31,24 @@ export function SessionProvider(props: React.PropsWithChildren) {
   return (
     <AuthContext.Provider
       value={{
-        signIn: () => {
+        signIn: async (email: string, password: string) => {
           // Perform sign-in logic here
-          setSession(`{"name":"Gabriel"}`);
+          var response = await fetch(
+            process.env.EXPO_PUBLIC_API_URL + "/api/login",
+            {
+              method: "POST",
+              body: JSON.stringify({
+                email: email,
+                password: password,
+              }),
+            }
+          );
+          let user = JSON.parse(await response.text());
+          if (response.status == 200 && user) {
+            setSession(JSON.stringify(user));
+            return true;
+          }
+          return false;
         },
         signOut: () => {
           setSession(null);

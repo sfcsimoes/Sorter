@@ -90,30 +90,31 @@ export async function PUT(req: NextRequest, res: NextResponse) {
     originId: z.number(),
     destinationId: z.number(),
     statusId: z.number(),
-    products: z.array(productSchema),
+    synchronizationId: z.string(),
+    updatedAt: z.string(),
+    productsInShipmentOrders: z.array(productSchema),
   });
 
   await db.transaction(async (tx) => {
     try {
-      orderObject.parse(data);
-
+      var order = orderObject.parse(data);
       var shipmentOrderId = await tx.update(shipmentOrders)
         .set({
-          statusId: data.statusId,
-          updatedAt: new Date().toISOString(),
-          synchronizationId: crypto.randomUUID()
+          statusId: order.statusId,
+          updatedAt: order.updatedAt,
+          synchronizationId: order.synchronizationId
         })
-        .where(eq(shipmentOrders.id, data.id))
+        .where(eq(shipmentOrders.id, order.id))
         .returning({ updatedId: shipmentOrders.id });
 
-      data.products.forEach(async (i: any) => {
+      order.productsInShipmentOrders.forEach(async (product) => {
 
         await tx.update(productsInShipmentOrders)
           .set({
-            isInTransportationBox: i.isInTransportationBox,
-            transportationBoxId: i.transportationBoxId,
+            isInTransportationBox: product.isInTransportationBox,
+            transportationBoxId: product.transportationBoxId,
           })
-          .where(eq(productsInShipmentOrders.id, i.id))
+          .where(eq(productsInShipmentOrders.id, product.id))
       
       });
 

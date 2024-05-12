@@ -13,12 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  ListFilter,
-  PlusCircle,
-  Loader2,
-  Edit2,
-} from "lucide-react";
+import { ListFilter, PlusCircle, Loader2, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -70,7 +65,6 @@ import { atom, useAtom } from "jotai";
 import bcrypt from "bcryptjs";
 import { User } from "@/types";
 
-
 const sheetAtom = atom(false);
 const sheetUpdateAtom = atom(false);
 const userAtom = atom<User>({
@@ -84,14 +78,12 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    cell: ({ row }) => <div className="capitalize">{row.getValue("name")}</div>,
+    cell: ({ row }) => <div>{row.getValue("name")}</div>,
   },
   {
     accessorKey: "email",
     header: "Email",
-    cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("email")}</div>
-    ),
+    cell: ({ row }) => <div>{row.getValue("email")}</div>,
   },
   {
     accessorKey: "emailVerified",
@@ -239,26 +231,27 @@ function EditUser() {
   const [user, setUser] = useAtom(userAtom);
 
   const formSchema = z.object({
+    id: z.number(),
     name: z.string().min(4),
     email: z.string().email(),
-    password: z.string().min(6),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      id: 0,
       name: "",
       email: "",
-      password: "",
     },
   });
 
-  form.setValue("name", user.name);
-  form.setValue("email", user.email);
+  React.useEffect(() => {
+    form.setValue("id", parseInt(user.id));
+    form.setValue("name", user.name);
+    form.setValue("email", user.email);
+  }, [openSheet]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
     let request = await fetch("/api/users", {
       method: "PUT",
       body: JSON.stringify(values),
@@ -325,7 +318,9 @@ export default function DataTableDemo() {
 
   const [data, setData] = React.useState([]);
   const [isLoading, setLoading] = React.useState(true);
-  const [openSheet, setSheetOpen] = useAtom(sheetAtom);
+  const [openSheet] = useAtom(sheetAtom);
+  const [openSheetUpdate] = useAtom(sheetUpdateAtom);
+
 
   React.useEffect(() => {
     fetch("/api/users")
@@ -335,7 +330,7 @@ export default function DataTableDemo() {
         setLoading(false);
       })
       .catch((error) => console.log(error));
-  }, [openSheet]);
+  }, [openSheet, openSheetUpdate]);
 
   const table = useReactTable({
     data,

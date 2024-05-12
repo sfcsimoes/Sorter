@@ -24,17 +24,16 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -43,13 +42,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Label } from "@/components/ui/label";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
-  SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -105,16 +100,12 @@ export const columns: ColumnDef<Warehouse>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => (
-      <div className="lowercase">{row.getValue("address")}</div>
-    ),
+    cell: ({ row }) => <div>{row.getValue("address")}</div>,
   },
   {
     accessorKey: "createdAt",
     header: "Created",
-    cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("createdAt")}</div>
-    ),
+    cell: ({ row }) => <div>{row.getValue("createdAt")}</div>,
   },
   {
     accessorKey: "updatedAt",
@@ -228,7 +219,8 @@ function AddWarehouse() {
                 <FormItem>
                   <FormLabel>Address</FormLabel>
                   <FormControl>
-                    <Input placeholder="" {...field} />
+                    <Textarea placeholder="" {...field} />
+                    {/* <Input placeholder="" {...field} /> */}
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -248,6 +240,7 @@ function EditWarehouse() {
   const [warehouse, setWarehouse] = useAtom(warehouseAtom);
 
   const formSchema = z.object({
+    id: z.number(),
     name: z.string().min(3, {
       message: "Name must be at least 3 characters.",
     }),
@@ -259,13 +252,17 @@ function EditWarehouse() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      id: 0,
       name: "",
       address: "",
     },
   });
 
-  form.setValue("name", warehouse.name);
-  form.setValue("address", warehouse.address);
+  React.useEffect(() => {
+    form.setValue("id", parseInt(warehouse.id));
+    form.setValue("name", warehouse.name);
+    form.setValue("address", warehouse.address);
+  }, [openSheet]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     let request = await fetch("/api/warehouses", {
@@ -276,7 +273,7 @@ function EditWarehouse() {
       setSheetOpen(false);
       toast({
         title: "Success",
-        description: "Warehouse added successfully",
+        description: "Warehouse updated successfully",
       });
     }
   }
@@ -309,7 +306,7 @@ function EditWarehouse() {
                 <FormItem>
                   <FormLabel>Address</FormLabel>
                   <FormControl>
-                    <Input disabled placeholder="" {...field} />
+                    <Textarea placeholder="" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -323,7 +320,7 @@ function EditWarehouse() {
   );
 }
 
-export default function DataTableDemo() {
+export default function Warehouses() {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
@@ -334,7 +331,8 @@ export default function DataTableDemo() {
 
   const [data, setData] = React.useState([]);
   const [isLoading, setLoading] = React.useState(true);
-  const [openSheet, setSheetOpen] = useAtom(sheetAtom);
+  const [openSheet] = useAtom(sheetAtom);
+  const [openSheetUpdate] = useAtom(sheetUpdateAtom);
 
   React.useEffect(() => {
     fetch("/api/warehouses")
@@ -344,7 +342,7 @@ export default function DataTableDemo() {
         setLoading(false);
       })
       .catch((error) => console.log(error));
-  }, [openSheet]);
+  }, [openSheet, openSheetUpdate]);
 
   const table = useReactTable({
     data,

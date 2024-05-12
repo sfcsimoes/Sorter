@@ -26,9 +26,7 @@ import {
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -256,34 +254,35 @@ function AddProduct() {
 function EditProduct() {
   const { toast } = useToast();
   const [openSheet, setSheetOpen] = useAtom(sheetUpdateAtom);
-  const [productA, setProductA] = useAtom(productAtom);
+  const [product, setProductA] = useAtom(productAtom);
 
   const formSchema = z.object({
+    id: z.number(),
     name: z.string().min(3, {
       message: "Name must be at least 3 characters.",
     }),
-    ean: z.string().min(12, {
-      message: "EAN must be at least 2 characters.",
-    }),
+    ean: z.string(),
     isTransportationBox: z.boolean().default(false),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      id: 0,
       name: "",
       ean: "",
       isTransportationBox: false,
     },
   });
 
-  form.setValue("name", productA.name);
-  form.setValue("ean", productA.ean);
-  form.setValue("isTransportationBox", productA.isTransportationBox);
+  React.useEffect(() => {
+    form.setValue("id", parseInt(product.id));
+    form.setValue("name", product.name);
+    form.setValue("ean", product.ean);
+    form.setValue("isTransportationBox", product.isTransportationBox);
+  }, [openSheet]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
     let request = await fetch("/api/products", {
       method: "PUT",
       body: JSON.stringify(values),
@@ -302,9 +301,6 @@ function EditProduct() {
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Edit Product</SheetTitle>
-          {/* <SheetDescription>
-                Make changes to your profile here. Click save when you're done.
-              </SheetDescription> */}
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -367,7 +363,8 @@ export default function DataTableDemo() {
 
   const [data, setData] = React.useState([]);
   const [isLoading, setLoading] = React.useState(true);
-  const [openSheet, setSheetOpen] = useAtom(sheetAtom);
+  const [openSheet] = useAtom(sheetAtom);
+  const [openSheetUpdate] = useAtom(sheetUpdateAtom);
 
   React.useEffect(() => {
     fetch("/api/products")
@@ -377,7 +374,7 @@ export default function DataTableDemo() {
         setLoading(false);
       })
       .catch((error) => console.log(error));
-  }, [openSheet]);
+  }, [openSheet, openSheetUpdate]);
 
   const table = useReactTable({
     data,

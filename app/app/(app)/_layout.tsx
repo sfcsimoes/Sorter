@@ -2,7 +2,6 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import {
   DarkTheme,
   DefaultTheme,
-  ThemeProvider
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack, Redirect, Link } from "expo-router";
@@ -13,9 +12,10 @@ import { useColorScheme } from "@/components/useColorScheme";
 import { RootSiblingParent } from "react-native-root-siblings";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import { openDatabaseSync } from "expo-sqlite";
-import { View, Text, Button, Appearance } from "react-native";
+import { View, Text, Button, Appearance, Pressable } from "react-native";
 import { useSession } from "@/auth/ctx";
 import { useDarkModeStore } from "@/Stores/darkModeStore";
+import { useServerConnectionStore } from "@/Stores/serverConnectionStore";
 
 const expoDb = openDatabaseSync("db.db");
 const db = drizzle(expoDb);
@@ -55,28 +55,29 @@ export default function RootLayout() {
     return null;
   }
 
-   if (isLoading) {
-     return <Text>Loading...</Text>;
-   }
+  if (isLoading) {
+    return <Text>Loading...</Text>;
+  }
 
-   // Only require authentication within the (app) group's layout as users
-   // need to be able to access the (auth) group and sign in again.
-   if (!session) {
-     // On web, static rendering will stop here as the user is not authenticated
-     // in the headless Node process that the pages are rendered in.
-     return <Redirect href="/login" />;
-   }
+  // Only require authentication within the (app) group's layout as users
+  // need to be able to access the (auth) group and sign in again.
+  if (!session) {
+    // On web, static rendering will stop here as the user is not authenticated
+    // in the headless Node process that the pages are rendered in.
+    return <Redirect href="/login" />;
+  }
 
   return <RootLayoutNav />;
 }
 
 function RootLayoutNav() {
+  const { hasConnection, setShowConnectionAlert } = useServerConnectionStore();
   const { darkMode, setDarkMode } = useDarkModeStore();
-   if (darkMode) {
-     Appearance.setColorScheme("dark");
-   } else {
-     Appearance.setColorScheme("light");
-   }
+  if (darkMode) {
+    Appearance.setColorScheme("dark");
+  } else {
+    Appearance.setColorScheme("light");
+  }
   const colorScheme = useColorScheme();
 
   const toastConfig = {
@@ -120,21 +121,42 @@ function RootLayoutNav() {
   };
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <RootSiblingParent>
-        <Stack>
-          <Stack.Screen
-            name="index"
-            options={{
-              title: "Armazens",
-              headerShown: true,
-            }}
-          />
-          <Stack.Screen
-            name="orders"
-            options={{
-              headerShown: true,
-              headerRight: () => (
+    // <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <RootSiblingParent>
+      <Stack>
+        <Stack.Screen
+          name="index"
+          options={{
+            title: "Armazens",
+            headerShown: true,
+          }}
+        />
+        <Stack.Screen
+          name="orders"
+          options={{
+            headerShown: true,
+            headerRight: () => (
+              <>
+                {hasConnection ? (
+                  <View></View>
+                ) : (
+                  <Pressable
+                    style={{ marginStart: "auto" }}
+                    onPress={() => {
+                      setShowConnectionAlert(true);
+                    }}
+                  >
+                    <FontAwesome
+                      style={{
+                        color: "rgba(239, 68, 68, 0.75)",
+                        marginEnd: 20,
+                      }}
+                      name="warning"
+                      size={20}
+                    />
+                  </Pressable>
+                )}
+
                 <Link asChild href={"/modal"}>
                   <FontAwesome
                     name="cog"
@@ -146,16 +168,43 @@ function RootLayoutNav() {
                     }
                   />
                 </Link>
-              ),
-            }}
-          />
-          <Stack.Screen
-            name="modal"
-            options={{ presentation: "modal", title: "Settings" }}
-          />
-        </Stack>
-        <Toast config={toastConfig} />
-      </RootSiblingParent>
-    </ThemeProvider>
+              </>
+            ),
+          }}
+        />
+        <Stack.Screen
+          name="order"
+          options={{
+            headerShown: true,
+            headerRight: () => (
+              <>
+                {hasConnection ? (
+                  <View></View>
+                ) : (
+                  <Pressable
+                    style={{ marginStart: "auto" }}
+                    onPress={() => {
+                      setShowConnectionAlert(true);
+                    }}
+                  >
+                    <FontAwesome
+                      style={{ color: "rgba(239, 68, 68, 0.75)" }}
+                      name="warning"
+                      size={20}
+                    />
+                  </Pressable>
+                )}
+              </>
+            ),
+          }}
+        />
+        <Stack.Screen
+          name="modal"
+          options={{ presentation: "modal", title: "Settings" }}
+        />
+      </Stack>
+      <Toast config={toastConfig} />
+    </RootSiblingParent>
+    // </ThemeProvider>
   );
 }

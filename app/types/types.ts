@@ -66,3 +66,10 @@ export interface OrderStatus {
     createdAt: string
     updatedAt: string
 }
+
+
+export interface SyncOrders {
+    id: number
+    shipmentOrderId: number
+    synced: string
+}

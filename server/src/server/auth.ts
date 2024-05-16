@@ -81,6 +81,10 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
+  theme: {
+    colorScheme: "auto",
+    logo: "https://i.ibb.co/Lhc3d9h/logo.png", // Absolute URL to image
+  }
 };
 
 /**

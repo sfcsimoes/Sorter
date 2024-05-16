@@ -51,7 +51,7 @@ export default function Orders() {
 
   return (
     <SafeAreaView>
-      {/* <BackgroundSync /> */}
+      <BackgroundSync />
       <Stack.Screen
         options={{
           title: warehouse?.name || "Armazem",

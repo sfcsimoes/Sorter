@@ -73,6 +73,7 @@ export const shipmentOrders = createTable('shipmentOrders', {
 	destinationId: int('destinationId').references(() => warehouses.id),
 	statusId: int('statusId').references(() => orderStatus.id),
 	synchronizationId: text("synchronizationId").$defaultFn(() => crypto.randomUUID()),
+	fulfilledById: int('fulfilledById').references(() => users.id),
 	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
 	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
 });
@@ -91,6 +92,10 @@ export const shipmentOrdersRelations = relations(shipmentOrders, ({ one, many })
 		fields: [shipmentOrders.statusId],
 		references: [orderStatus.id],
 	}),
+	fulfilledBy: one(users, {
+		fields: [shipmentOrders.fulfilledById],
+		references: [users.id],
+	}),
 }));
 
 export const productsInShipmentOrders = createTable('productsInShipmentOrders', {
@@ -98,7 +103,6 @@ export const productsInShipmentOrders = createTable('productsInShipmentOrders', 
 	shipmentOrderId: int('shipmentOrderId').references(() => shipmentOrders.id),
 	productId: int('productId').references(() => products.id),
 	units: int('units'),
-	fulfilledBy: int('fulfilledBy').references(() => users.id),
 	isInTransportationBox: int('isInTransportationBox', { mode: 'boolean' }),
 	transportationBoxId: int('transportationBoxId').references(() => products.id),
 });
@@ -115,5 +119,5 @@ export const productsInShipmentOrdersRelations = relations(productsInShipmentOrd
 	transportationBox: one(products, {
 		fields: [productsInShipmentOrders.transportationBoxId],
 		references: [products.id],
-	}),
+	})
 }));

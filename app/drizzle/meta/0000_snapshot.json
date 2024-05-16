@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "2c87fa3a-aa67-44f7-b40d-268eccceb960",
+  "id": "f8f8e19e-a3c1-4b8d-8375-e69b53fb6058",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "orderStatus": {
@@ -141,13 +141,6 @@
           "notNull": false,
           "autoincrement": false
         },
-        "fulfilledBy": {
-          "name": "fulfilledBy",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "isInTransportationBox": {
           "name": "isInTransportationBox",
           "type": "integer",
@@ -184,19 +177,6 @@
           "tableTo": "products",
           "columnsFrom": [
             "productId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "productsInShipmentOrders_fulfilledBy_users_id_fk": {
-          "name": "productsInShipmentOrders_fulfilledBy_users_id_fk",
-          "tableFrom": "productsInShipmentOrders",
-          "tableTo": "users",
-          "columnsFrom": [
-            "fulfilledBy"
           ],
           "columnsTo": [
             "id"
@@ -259,6 +239,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "fulfilledById": {
+          "name": "fulfilledById",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "createdAt": {
           "name": "createdAt",
           "type": "text",
@@ -310,6 +297,19 @@
           "tableTo": "orderStatus",
           "columnsFrom": [
             "statusId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "shipmentOrders_fulfilledById_users_id_fk": {
+          "name": "shipmentOrders_fulfilledById_users_id_fk",
+          "tableFrom": "shipmentOrders",
+          "tableTo": "users",
+          "columnsFrom": [
+            "fulfilledById"
           ],
           "columnsTo": [
             "id"

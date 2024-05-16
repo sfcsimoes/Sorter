@@ -52,37 +52,37 @@ await db.insert(warehouses).values([
 await db.insert(products).values([
   {
     name: "PenDrive",
-    ean: "10000000000",
+    ean: "100000000000",
     isTransportationBox: false,
   },
   {
     name: "Cartão Presente",
-    ean: "20000000000",
+    ean: "200000000000",
     isTransportationBox: false,
   },
   {
     name: "Playstation 5",
-    ean: "30000000000",
+    ean: "300000000000",
     isTransportationBox: false,
   },
   {
     name: "Iphone 15",
-    ean: "40000000000",
+    ean: "400000000000",
     isTransportationBox: false,
   },
   {
     name: "Caixa 1",
-    ean: "99100000000",
+    ean: "991000000000",
     isTransportationBox: true,
   },
   {
     name: "Caixa 2",
-    ean: "99200000000",
+    ean: "992000000000",
     isTransportationBox: true,
   },
   {
     name: "Caixa 3",
-    ean: "99300000000",
+    ean: "993000000000",
     isTransportationBox: true,
   },
 ]);
@@ -151,11 +151,3 @@ await db.insert(productsInShipmentOrders).values([
     transportationBoxId: 3
   },
 ]);
-
-
-
-
-// addShipmentOrders({ status: 'Pendente', originId: 2, destinationId: 1 });
-
-// addProductsInShipmentOrders({ shipmentOrder: 2, product: 1, units: 2, isInTransportationBox: false });
-// addProductsInShipmentOrders({ shipmentOrder: 2, product: 2, units: 2, isInTransportationBox: false });

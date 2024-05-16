@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
               product: true,
               transportationBox: true
             },
-          }
+          },
+          fulfilledBy: true
         },
       });
     return NextResponse.json(shipmentOrders);
@@ -46,27 +47,30 @@ export async function POST(req: NextRequest, res: NextResponse) {
 
   await db.transaction(async (tx) => {
     try {
-      orderObject.parse(data);
+      console.log(data)
+      var order = orderObject.parse(data);
+      console.log(order)
+
       var shipmentOrderId = await tx
         .insert(shipmentOrders)
         .values({
-          originId: parseInt(data.originId),
-          destinationId: parseInt(data.destinationId),
-          statusId: parseInt(data.statusId),
+          originId: parseInt(order.originId),
+          destinationId: parseInt(order.destinationId),
+          statusId: parseInt(order.statusId),
         })
         .returning({ insertedId: shipmentOrders.id });
 
 
-      data.products.forEach(async (i: any) => {
+      order.products.forEach(async (i) => {
         await tx.insert(productsInShipmentOrders).values({
+          productId: parseInt(i.id),
           units: i.units,
-          productId: i.id,
-          fulfilledBy: 1,
           isInTransportationBox: false,
           shipmentOrderId: shipmentOrderId[0]?.insertedId,
         });
       });
     } catch (error) {
+      console.log(error)
       await tx.rollback();
       return NextResponse.json({ message: "Invalid Object" });
     }
@@ -91,6 +95,7 @@ export async function PUT(req: NextRequest, res: NextResponse) {
     destinationId: z.number(),
     statusId: z.number(),
     synchronizationId: z.string(),
+    fulfilledById: z.number(),
     updatedAt: z.string(),
     productsInShipmentOrders: z.array(productSchema),
   });
@@ -102,7 +107,8 @@ export async function PUT(req: NextRequest, res: NextResponse) {
         .set({
           statusId: order.statusId,
           updatedAt: order.updatedAt,
-          synchronizationId: order.synchronizationId
+          synchronizationId: order.synchronizationId,
+          fulfilledById: order.fulfilledById,
         })
         .where(eq(shipmentOrders.id, order.id))
         .returning({ updatedId: shipmentOrders.id });

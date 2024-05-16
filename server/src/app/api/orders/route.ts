@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     const shipmentOrders = await db.query.shipmentOrders.findMany({
       with: {
         productsInShipmentOrders: true,
+        fulfilledBy: true
       },
       where: (shipmentOrders, { eq }) => eq(shipmentOrders.originId, parseFloat(id)),
     });
@@ -19,12 +20,11 @@ export async function GET(request: NextRequest) {
     const shipmentOrders = await db.query.shipmentOrders.findMany({
       with: {
         productsInShipmentOrders: true,
+        fulfilledBy: true
       },
     });
     return NextResponse.json(shipmentOrders);
   }
-  return NextResponse.json({ message: "Invalid Param" });
-
 }
 
 
@@ -41,18 +41,19 @@ export async function POST(req: NextRequest, res: NextResponse) {
     originId: z.string(),
     destinationId: z.string(),
     statusId: z.string(),
+    fulfilledById: z.number(),
     products: z.array(productSchema),
   });
 
   await db.transaction(async (tx) => {
     try {
-      orderObject.parse(data);
+      let order = orderObject.parse(data);
       var shipmentOrderId = await tx
         .insert(shipmentOrders)
         .values({
-          originId: parseInt(data.originId),
-          destinationId: parseInt(data.destinationId),
-          statusId: parseInt(data.statusId),
+          originId: parseInt(order.originId),
+          destinationId: parseInt(order.destinationId),
+          statusId: parseInt(order.statusId),
         })
         .returning({ insertedId: shipmentOrders.id });
 
@@ -61,7 +62,6 @@ export async function POST(req: NextRequest, res: NextResponse) {
         await tx.insert(productsInShipmentOrders).values({
           units: i.units,
           productId: i.id,
-          fulfilledBy: 1,
           isInTransportationBox: false,
           shipmentOrderId: shipmentOrderId[0]?.insertedId,
         });

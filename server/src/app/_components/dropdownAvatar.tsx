@@ -13,12 +13,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getServerAuthSession } from "@/server/auth";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type Checked = DropdownMenuCheckboxItemProps["checked"];
 
 export function DropdownAvatar(props: { session: any }) {
+  const router = useRouter();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -37,8 +39,8 @@ export function DropdownAvatar(props: { session: any }) {
           </p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <Link href="/api/auth/signout">Logout</Link>
+        <DropdownMenuItem onClick={() => router.push("/api/auth/signout")}>
+          Logout
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

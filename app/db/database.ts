@@ -121,7 +121,8 @@ export class DatabaseHelper {
                     .set({
                         statusId: shipmentOrder.statusId,
                         updatedAt: new Date(),
-                        synchronizationId: uuid.v4().toString()
+                        synchronizationId: uuid.v4().toString(),
+                        fulfilledById: shipmentOrder.fulfilledById
                     })
                     .where(eq(schema.shipmentOrders.id, shipmentOrder.id))
 

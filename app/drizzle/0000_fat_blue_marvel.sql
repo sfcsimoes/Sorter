@@ -21,12 +21,10 @@ CREATE TABLE `productsInShipmentOrders` (
 	`shipmentOrderId` integer,
 	`productId` integer,
 	`units` integer,
-	`fulfilledBy` integer,
 	`isInTransportationBox` integer,
 	`transportationBoxId` integer,
 	FOREIGN KEY (`shipmentOrderId`) REFERENCES `shipmentOrders`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`productId`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`fulfilledBy`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`transportationBoxId`) REFERENCES `products`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -36,11 +34,13 @@ CREATE TABLE `shipmentOrders` (
 	`destinationId` integer,
 	`statusId` integer,
 	`synchronizationId` text,
+	`fulfilledById` integer,
 	`createdAt` text DEFAULT (CURRENT_TIMESTAMP),
 	`updatedAt` text DEFAULT (CURRENT_TIMESTAMP),
 	FOREIGN KEY (`originId`) REFERENCES `warehouses`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`destinationId`) REFERENCES `warehouses`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`statusId`) REFERENCES `orderStatus`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`statusId`) REFERENCES `orderStatus`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`fulfilledById`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `syncOrders` (

@@ -14,6 +14,8 @@ export interface ShipmentOrder {
     createdAt: string;
     updatedAt: string;
     synchronizationId: string;
+    fulfilledById?: number;
+    // fulfilledBy: number;
     productsInShipmentOrders: ProductsInShipmentOrder[];
     productsInBoxes: ProductsInShipmentOrder[];
 }
@@ -23,7 +25,6 @@ export interface ProductsInShipmentOrder {
     productId: number
     shipmentOrderId: number
     units: number
-    fulfilledBy: any
     isInTransportationBox: boolean
     transportationBoxId?: number
     product: Product
@@ -66,7 +67,6 @@ export interface OrderStatus {
     createdAt: string
     updatedAt: string
 }
-
 
 export interface SyncOrders {
     id: number

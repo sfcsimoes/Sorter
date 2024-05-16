@@ -163,7 +163,7 @@ export default function Component() {
       }),
     })
     .refine((i) => i.originId !== i.destinationId, {
-      message: "Origem e destino devem ser diferentes",
+      message: "Origin e destination must be different",
       path: ["destinationId"],
     });
 
@@ -180,7 +180,7 @@ export default function Component() {
   const origin = form.watch("originId");
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    let request = await fetch("/api/orders", {
+    let request = await fetch("/api/order", {
       method: "POST",
       body: JSON.stringify(values),
     });
@@ -408,7 +408,6 @@ export default function Component() {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit">Submit</Button>
                 </form>
               </Form>
             </div>
@@ -499,11 +498,6 @@ export default function Component() {
                         </Table>
                       </div>
                       <div className="flex items-center space-x-2 py-4">
-                        {/* <div className="flex-1 text-sm text-muted-foreground">
-                          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-                          {table.getFilteredRowModel().rows.length} row(s)
-                          selected.
-                        </div> */}
                         <div className="me-auto space-x-2">
                           <Button
                             variant="outline"

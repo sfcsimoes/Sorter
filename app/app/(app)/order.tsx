@@ -7,6 +7,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import React from "react";
 import Toast from "react-native-toast-message";
 import StyledButton from "@/components/StyledButton";
+import Separator from "@/components/Separator";
 import {
   AuxParameters,
   ProductsInBoxes,
@@ -22,6 +23,7 @@ import {
 import { atom, useAtom } from "jotai";
 import { DatabaseHelper } from "@/db/database";
 import { DangerAlert } from "@/components/DangerAlert";
+import { useSession } from "@/auth/ctx";
 
 const productsAtom = atom<ProductsInShipmentOrder[]>([]);
 const shipmentOrderAtom = atom<ShipmentOrder>({
@@ -32,6 +34,7 @@ const shipmentOrderAtom = atom<ShipmentOrder>({
   createdAt: "",
   updatedAt: "",
   synchronizationId: "",
+  fulfilledById: 0,
   productsInShipmentOrders: [],
   productsInBoxes: [],
 });
@@ -206,11 +209,7 @@ function List() {
               <Text style={styles.heading} role="heading" aria-level="2">
                 Artigos
               </Text>
-              <View
-                style={styles.separator}
-                lightColor="#eee"
-                darkColor="rgba(255,255,255,0.15)"
-              />
+              <Separator />
             </View>
             <FlashList
               data={notInBoxes}
@@ -249,11 +248,7 @@ function List() {
                         />
                       </View>
                     </View>
-                    <View
-                      style={styles.separator}
-                      lightColor="#eee"
-                      darkColor="rgba(255,255,255,0.15)"
-                    />
+                    <Separator />
                   </>
                 );
               }}
@@ -271,11 +266,7 @@ function List() {
                 <Text style={styles.heading} role="heading" aria-level="2">
                   Artigos em Caixas
                 </Text>
-                <View
-                  style={styles.separator}
-                  lightColor="#eee"
-                  darkColor="rgba(255,255,255,0.15)"
-                />
+                <Separator />
               </View>
               <FlashList
                 nestedScrollEnabled={true}
@@ -310,11 +301,7 @@ function List() {
                           />
                         </View>
                       </View>
-                      <View
-                        style={styles.separator}
-                        lightColor="#eee"
-                        darkColor="rgba(255,255,255,0.15)"
-                      />
+                      <Separator />
                       {showItems ? (
                         <>
                           <View style={{ minHeight: 100 }}>
@@ -365,11 +352,7 @@ function List() {
                                       </View>
                                     </View>
 
-                                    <View
-                                      style={styles.separator}
-                                      lightColor="#eee"
-                                      darkColor="rgba(255,255,255,0.15)"
-                                    />
+                                    <Separator />
                                   </>
                                 );
                               }}
@@ -398,51 +381,19 @@ function List() {
 function ShowCompleteButton(props: { show: Boolean }) {
   const [products, setProducts] = useAtom(productsAtom);
   const [shipmentOrder, setShipmentOrder] = useAtom(shipmentOrderAtom);
+  const { session, isLoading } = useSession();
 
   async function finishOrder() {
-    let db = new DatabaseHelper();
-    shipmentOrder.statusId = 2;
-    shipmentOrder.productsInShipmentOrders = products;
-    db.updateShipmentOrders(shipmentOrder);
-    router.back();
-    //   try {
-    //     let request = await fetch(
-    //       process.env.EXPO_PUBLIC_API_URL + "/api/order",
-    //       {
-    //         method: "PUT",
-    //         body: JSON.stringify({
-    //           id: shipmentOrder.id,
-    //           originId: shipmentOrder.originId,
-    //           destinationId: shipmentOrder.destinationId,
-    //           statusId: 2,
-    //           products: products.map(
-    //             ({
-    //               id,
-    //               shipmentOrderId,
-    //               productId,
-    //               units,
-    //               isInTransportationBox,
-    //               transportationBoxId,
-    //             }) => ({
-    //               id,
-    //               shipmentOrderId,
-    //               productId,
-    //               units,
-    //               isInTransportationBox,
-    //               transportationBoxId,
-    //             })
-    //           ),
-    //         }),
-    //       }
-    //     );
-    //     if (request.status == 200) {
-    //       router.back();
-    //     } else {
-    //       throw "Erro";
-    //     }
-    //   } catch (e) {
-    //     console.log(e);
-    //   }
+    if (session) {
+      let db = new DatabaseHelper();
+      let userId = JSON.parse(session).id;
+      shipmentOrder.statusId = 2;
+      shipmentOrder.productsInShipmentOrders = products;
+      shipmentOrder.fulfilledById = parseInt(userId);
+      // products.forEach((i) => (i.fulfilledById = userId));
+      db.updateShipmentOrders(shipmentOrder);
+      router.back();
+    }
   }
 
   if (props.show) {
@@ -450,6 +401,60 @@ function ShowCompleteButton(props: { show: Boolean }) {
       <StyledButton onPress={finishOrder} title="Finalizar" variant="default" />
     );
   }
+}
+
+function FulfilledOrder(props: { productsList: ProductsInShipmentOrder[] }) {
+  return (
+    <View style={styles.container}>
+      <Stack.Screen
+        options={{
+          title: "Encomenda ",
+        }}
+      />
+
+      <Text style={styles.heading} role="heading" aria-level="2">
+        Status: {" Fulfilled"}
+      </Text>
+      <Separator />
+      <Text style={styles.heading} role="heading" aria-level="2">
+        Fulfilled By: {" Fulfilled"}
+      </Text>
+      <Separator />
+      <View style={{ marginTop: 8 }}>
+        <Text style={styles.heading} role="heading" aria-level="2">
+          Artigos
+        </Text>
+        <Separator />
+      </View>
+      <FlashList
+        data={props.productsList}
+        renderItem={({ item, index }) => {
+          return (
+            <>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginTop: 2,
+                }}
+              >
+                <View style={{ marginLeft: 2, flex: 6 }}>
+                  <Text style={styles.title}>{item.product?.name}</Text>
+                  <Text style={styles.subTitle}>Quantidade:{item.units}</Text>
+                  <Text style={styles.subTitle}>EAN: {item.product?.ean}</Text>
+                </View>
+                <View
+                  style={{ marginLeft: 2, flex: 4, flexDirection: "row" }}
+                ></View>
+              </View>
+              <Separator />
+            </>
+          );
+        }}
+        estimatedItemSize={200}
+      />
+    </View>
+  );
 }
 
 export default function App() {
@@ -607,6 +612,10 @@ export default function App() {
     }, 1500);
   };
 
+  if (shipmentOrder.statusId == 2) {
+    console.log(products);
+    return <FulfilledOrder productsList={products} />;
+  }
   return (
     <View style={styles.container}>
       <Stack.Screen
@@ -656,10 +665,5 @@ const styles = StyleSheet.create({
   },
   subTitle: {
     fontSize: 16,
-  },
-  separator: {
-    marginVertical: 10,
-    height: 1,
-    width: "95%",
-  },
+  }
 });

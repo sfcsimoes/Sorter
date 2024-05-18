@@ -11,7 +11,8 @@
     "db:studio": "drizzle-kit studio",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "env": "@powershell -NoProfile -ExecutionPolicy Unrestricted -Command ./setEnv.ps1"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^0.7.0",

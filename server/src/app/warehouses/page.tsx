@@ -15,23 +15,12 @@ import {
 } from "@tanstack/react-table";
 import {
   ArrowUpDown,
-  ChevronDown,
-  ListFilter,
-  MoreHorizontal,
   PlusCircle,
   Loader2,
   Edit2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -74,9 +63,10 @@ import { Warehouse } from "@/types";
 const sheetAtom = atom(false);
 const sheetUpdateAtom = atom(false);
 const warehouseAtom = atom<Warehouse>({
-  id: "",
+  id: 0,
   name: "",
   address: "",
+  synchronizationId:  "",
   createdAt: "",
   updatedAt: "",
 });
@@ -105,13 +95,27 @@ export const columns: ColumnDef<Warehouse>[] = [
   {
     accessorKey: "createdAt",
     header: "Created",
-    cell: ({ row }) => <div>{row.getValue("createdAt")}</div>,
+    cell: ({ row }) => <div>    {new Date(row.getValue("createdAt")).toLocaleDateString(navigator.language, {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })}</div>,
   },
   {
     accessorKey: "updatedAt",
     header: "Updated",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("updatedAt")}</div>
+      <div className="capitalize">    {new Date(row.getValue("updatedAt")).toLocaleDateString(navigator.language, {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })}</div>
     ),
   },
   {
@@ -259,7 +263,7 @@ function EditWarehouse() {
   });
 
   React.useEffect(() => {
-    form.setValue("id", parseInt(warehouse.id));
+    form.setValue("id", warehouse.id);
     form.setValue("name", warehouse.name);
     form.setValue("address", warehouse.address);
   }, [openSheet]);
@@ -371,35 +375,13 @@ export default function Warehouses() {
       <div className="flex items-center py-4">
         <AddWarehouse />
         <EditWarehouse />
-
-        <div className="ms-auto">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ms-2 gap-1">
-                <ListFilter className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                  Filter
-                </span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem checked>
-                Active
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Draft</DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Archived</DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
         <Input
           placeholder="Filter name..."
           value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn("name")?.setFilterValue(event.target.value)
           }
-          className="ms-2 max-w-xs"
+          className="ms-auto max-w-xs"
         />
       </div>
       <div className="rounded-md border">

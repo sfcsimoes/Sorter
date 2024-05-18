@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
     return NextResponse.json(await db.query.warehouses.findMany());
+    // return NextResponse.json({ message: 'Invalid Object' }, { status: 500 });
 }
 
 export async function POST(req: NextRequest, res: NextResponse) {

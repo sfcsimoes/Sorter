@@ -12,7 +12,7 @@ import { useColorScheme } from "@/components/useColorScheme";
 import { RootSiblingParent } from "react-native-root-siblings";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import { openDatabaseSync } from "expo-sqlite";
-import { View, Text, Button, Appearance, Pressable } from "react-native";
+import { View, Text, Appearance, Pressable } from "react-native";
 import { useSession } from "@/auth/ctx";
 import { useDarkModeStore } from "@/Stores/darkModeStore";
 import { useServerConnectionStore } from "@/Stores/serverConnectionStore";
@@ -121,7 +121,6 @@ function RootLayoutNav() {
   };
 
   return (
-    // <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
     <RootSiblingParent>
       <Stack>
         <Stack.Screen
@@ -205,6 +204,5 @@ function RootLayoutNav() {
       </Stack>
       <Toast config={toastConfig} />
     </RootSiblingParent>
-    // </ThemeProvider>
   );
 }

@@ -1,6 +1,5 @@
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
-// import { env } from "@/env";
 import * as schema from "./schema";
 import { users, orderStatus, warehouses, products, shipmentOrders, productsInShipmentOrders } from "@/server/db/schema";
 import bcrypt from "bcryptjs";
@@ -120,7 +119,7 @@ await db.insert(productsInShipmentOrders).values([
     productId: 2,
     units: 2,
     isInTransportationBox: true,
-    transportationBoxId: 3
+    transportationBoxId: 5
   },
   {
     shipmentOrderId: 2,
@@ -141,13 +140,13 @@ await db.insert(productsInShipmentOrders).values([
     productId: 1,
     units: 2,
     isInTransportationBox: true,
-    transportationBoxId: 3
+    transportationBoxId: 5
   },
   {
     shipmentOrderId: 3,
     productId: 2,
     units: 2,
     isInTransportationBox: true,
-    transportationBoxId: 3
+    transportationBoxId: 6
   },
 ]);

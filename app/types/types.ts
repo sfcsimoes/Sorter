@@ -49,9 +49,8 @@ export interface TransportationBox {
 }
 
 export type AuxParameters = {
-    isBox: boolean | null | undefined;
-    showItems: boolean;
-    handleClick: any;
+    transportationBoxId: number | undefined;
+    isBox: boolean;
     item: ProductsInShipmentOrder | null;
 };
 
@@ -72,4 +71,15 @@ export interface SyncOrders {
     id: number
     shipmentOrderId: number
     synced: string
+}
+
+export type ShowBoxItem = {
+    transportationBoxId: number | undefined
+    show: boolean
+}
+
+export enum OrderStatusEnum {
+    Pending = 1,
+    Fulfilled = 2,
+    Canceled = 3,
 }

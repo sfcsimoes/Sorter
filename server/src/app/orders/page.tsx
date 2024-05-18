@@ -13,19 +13,15 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  ListFilter,
-  PlusCircle,
-  Loader2,
-  Edit2,
-} from "lucide-react";
+import { ListFilter, PlusCircle, Loader2, Edit2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -41,11 +37,9 @@ import { Badge } from "@/components/ui/badge";
 
 import { atom, useAtom } from "jotai";
 import Link from "next/link";
-import { Order, OrderStatus, Warehouse } from "@/types";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ShipmentOrder, OrderStatus, Warehouse } from "@/types";
 
 const sheetAtom = atom(false);
-const sheetUpdateAtom = atom(false);
 const orderAtom = atom<any>({
   id: "",
   originId: "",
@@ -69,7 +63,7 @@ function badgeStyle(type: string) {
 const warehousesAtom = atom<Warehouse[]>([]);
 const orderStatusAtom = atom<OrderStatus[]>([]);
 
-export const columns: ColumnDef<Order>[] = [
+export const columns: ColumnDef<ShipmentOrder>[] = [
   {
     accessorKey: "id",
     header: "Id",
@@ -105,57 +99,48 @@ export const columns: ColumnDef<Order>[] = [
     cell: ({ row }) => {
       const [orderStatusList, setorderStatusList] = useAtom(orderStatusAtom);
       return (
-        <Badge className="text-xs" variant={badgeStyle(row.getValue("statusId"))}>
-        {orderStatusList.find((i) => i.id == row.getValue("statusId"))?.name}
-      </Badge>
+        <Badge
+          className="text-xs"
+          variant={badgeStyle(row.getValue("statusId"))}
+        >
+          {orderStatusList.find((i) => i.id == row.getValue("statusId"))?.name}
+        </Badge>
       );
     },
+    filterFn: "equalsString",
   },
   {
     accessorKey: "createdAt",
     header: "Created",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("createdAt")}</div>
+      <div className="capitalize">
+        {new Date(row.getValue("createdAt")).toLocaleDateString(navigator.language, {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })}
+      </div>
     ),
   },
   {
     accessorKey: "updatedAt",
     header: "Updated",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("updatedAt")}</div>
+      <div className="capitalize">
+        {new Date(row.getValue("updatedAt")).toLocaleDateString(navigator.language, {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })}
+      </div>
     ),
   },
-  // {
-  //   id: "actions",
-  //   enableHiding: false,
-  //   cell: ({ row }) => {
-  //     const orderItem = row.original;
-  //     const [openSheet, setSheetOpen] = useAtom(sheetUpdateAtom);
-  //     const [order, setWarehouse] = useAtom(orderAtom);
-
-  //     return (
-  //       <TooltipProvider>
-  //         <Tooltip>
-  //           <TooltipTrigger asChild>
-  //             <Button
-  //               variant="outline"
-  //               size="icon"
-  //               onClick={() => {
-  //                 setSheetOpen(true);
-  //                 setWarehouse(orderItem);
-  //               }}
-  //             >
-  //               <Edit2 className="h-4 w-4" />
-  //             </Button>
-  //           </TooltipTrigger>
-  //           <TooltipContent>
-  //             <p>Edit</p>
-  //           </TooltipContent>
-  //         </Tooltip>
-  //       </TooltipProvider>
-  //     );
-  //   },
-  // },
 ];
 
 export default function OrdersTable() {
@@ -220,6 +205,7 @@ export default function OrdersTable() {
     },
   });
 
+
   return (
     <div className="w-full space-y-1.5 p-6">
       <div className="flex items-center">
@@ -250,11 +236,26 @@ export default function OrdersTable() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Filter by</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem checked>
-                Active
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Draft</DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem>Archived</DropdownMenuCheckboxItem>
+              <DropdownMenuRadioGroup
+                value={
+                  (table.getColumn("statusId")?.getFilterValue() as string) ??
+                  ""
+                }
+                // onValueChange={setPosition}
+                onValueChange={(event) =>
+                  table
+                    .getColumn("statusId")
+                    ?.setFilterValue(event)
+                }
+              >
+                <DropdownMenuRadioItem value="1">Pending</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="2">
+                  Fulfilled
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="3">
+                  Canceled
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -282,10 +283,7 @@ export default function OrdersTable() {
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
+                <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
@@ -313,10 +311,6 @@ export default function OrdersTable() {
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
         <div className="space-x-2">
           <Button
             variant="outline"

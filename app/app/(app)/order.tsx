@@ -1,8 +1,7 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { useState } from "react";
-import { StyleSheet, Pressable, Vibration } from "react-native";
+import { StyleSheet, Pressable, Vibration, Appearance } from "react-native";
 import { FlashList } from "@shopify/flash-list";
-import { Text, View, TextInput } from "@/components/Themed";
+import { Text, View } from "@/components/Themed";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import React from "react";
 import Toast from "react-native-toast-message";
@@ -10,9 +9,11 @@ import StyledButton from "@/components/StyledButton";
 import Separator from "@/components/Separator";
 import {
   AuxParameters,
+  OrderStatusEnum,
   ProductsInBoxes,
   ProductsInShipmentOrder,
   ShipmentOrder,
+  ShowBoxItem,
 } from "@/types/types";
 import {
   Stack,
@@ -22,8 +23,9 @@ import {
 } from "expo-router";
 import { atom, useAtom } from "jotai";
 import { DatabaseHelper } from "@/db/database";
-import { DangerAlert } from "@/components/DangerAlert";
+import { ConnectionAlert } from "@/components/ConnectionAlert";
 import { useSession } from "@/auth/ctx";
+import { Picker } from "@react-native-picker/picker";
 
 const productsAtom = atom<ProductsInShipmentOrder[]>([]);
 const shipmentOrderAtom = atom<ShipmentOrder>({
@@ -41,44 +43,110 @@ const shipmentOrderAtom = atom<ShipmentOrder>({
 const readingsAtom = atom<string[]>([]);
 const boxesAtom = atom<ProductsInBoxes[]>([]);
 const haveBoxesAtom = atom<boolean>(false);
+const showBoxesItemsAtom = atom<ShowBoxItem[]>([]);
 
-function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
+function Options({ isBox, transportationBoxId, item }: AuxParameters) {
   const [readings, setReadings] = useAtom(readingsAtom);
   const [products, setProducts] = useAtom(productsAtom);
-  const [boxes, setBoxes] = useAtom(boxesAtom);
-  const [haveBoxes, setHaveBoxes] = useAtom(haveBoxesAtom);
+  const [boxes] = useAtom(boxesAtom);
+  const [haveBoxes] = useAtom(haveBoxesAtom);
+  const [test] = React.useState();
+  const [showBoxesItems, setShowBoxesItems] = useAtom(showBoxesItemsAtom);
 
   function AddToBox(props: { item: ProductsInShipmentOrder }) {
+    const pickerRef = React.useRef<any>();
+
+    function open() {
+      if (pickerRef.current) {
+        pickerRef.current.focus();
+      }
+    }
+
+    function close() {
+      pickerRef.current.blur();
+    }
+
+    let dropDownIconColor =
+      Appearance.getColorScheme() === "dark" ? "#000" : "#fff";
     if (haveBoxes)
       return (
-        <StyledButton
-          onPress={() => {
-            if (props.item.isInTransportationBox) {
-              props.item.isInTransportationBox = false;
-              props.item.transportationBoxId = 0;
-            } else {
-              props.item.isInTransportationBox = true;
-              props.item.transportationBoxId = boxes[0].transportationBoxId;
-            }
-            setProducts((p) => [...p]);
-          }}
-          title={undefined}
-          variant="default"
-          icon={
-            props.item.isInTransportationBox ? (
-              <FontAwesome name="remove" size={18} />
-            ) : (
-              <FontAwesome name="shopping-basket" size={18} />
-            )
-          }
-        />
+        <View>
+          {showBoxesItems.length > 1 ? (
+            <View>
+              <Picker
+                style={{ display: "none" }}
+                ref={pickerRef}
+                selectedValue={test}
+                dropdownIconColor={dropDownIconColor}
+                onValueChange={(itemValue: any, itemIndex) => {
+                  if (itemValue) {
+                  props.item.isInTransportationBox = true;
+                    props.item.transportationBoxId = itemValue;
+                    setProducts((p) => [...p]);
+                  }
+                }}
+              >
+                <Picker.Item label="Options" />
+                {showBoxesItems.map(function (box) {
+                  return (
+                    <Picker.Item
+                      key={box.transportationBoxId}
+                      value={box.transportationBoxId}
+                      label={"Box " + box.transportationBoxId || ""}
+                    />
+                  );
+                })}
+              </Picker>
+              <StyledButton
+                onPress={() => {
+                  if (props.item.isInTransportationBox) {
+                    props.item.isInTransportationBox = false;
+                    props.item.transportationBoxId = 0;
+                     setProducts((p) => [...p]);
+                  } else {
+                    open();
+                  }
+                 
+                }}
+                title={undefined}
+                variant="default"
+                icon={
+                  props.item.isInTransportationBox ? (
+                    <FontAwesome name="remove" size={18} />
+                  ) : (
+                    <FontAwesome name="shopping-basket" size={18} />
+                  )
+                }
+              />
+            </View>
+          ) : (
+            <StyledButton
+              onPress={() => {
+                if (props.item.isInTransportationBox) {
+                  props.item.isInTransportationBox = false;
+                  props.item.transportationBoxId = 0;
+                } else {
+                  props.item.isInTransportationBox = true;
+                  props.item.transportationBoxId = boxes[0].transportationBoxId;
+                }
+                setProducts((p) => [...p]);
+              }}
+              title={undefined}
+              variant="default"
+              icon={
+                props.item.isInTransportationBox ? (
+                  <FontAwesome name="remove" size={18} />
+                ) : (
+                  <FontAwesome name="shopping-basket" size={18} />
+                )
+              }
+            />
+          )}
+        </View>
       );
   }
 
   if (!isBox && item) {
-    let product = products.find(
-      (i: any) => i.product?.ean == item.product?.ean
-    );
     return (
       <>
         <View>
@@ -130,11 +198,24 @@ function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
       </>
     );
   } else {
-    if (showItems) {
+    let showBox = showBoxesItems.find(
+      (i) => i.transportationBoxId == transportationBoxId
+    );
+    if (showBox?.show && showBox.show) {
       return (
         <>
           <StyledButton
-            onPress={handleClick}
+            onPress={() => {
+              if (showBox) {
+                setShowBoxesItems((options) =>
+                  options.map((option) =>
+                    option.transportationBoxId === transportationBoxId
+                      ? { ...option, show: false }
+                      : option
+                  )
+                );
+              }
+            }}
             title={undefined}
             variant="default"
             icon={<FontAwesome name="chevron-down" size={20} />}
@@ -145,7 +226,17 @@ function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
       return (
         <>
           <StyledButton
-            onPress={handleClick}
+            onPress={() => {
+              if (showBox) {
+                setShowBoxesItems((options) =>
+                  options.map((option) =>
+                    option.transportationBoxId === transportationBoxId
+                      ? { ...option, show: true }
+                      : option
+                  )
+                );
+              }
+            }}
             title={undefined}
             variant="default"
             icon={<FontAwesome name="chevron-up" size={20} />}
@@ -157,15 +248,11 @@ function Options({ isBox, showItems, handleClick, item }: AuxParameters) {
 }
 
 function List() {
-  const [products, setProducts] = useAtom(productsAtom);
-  const [readings, setReadings] = useAtom(readingsAtom);
-  const [boxes, setBoxes] = useAtom(boxesAtom);
+  const [products] = useAtom(productsAtom);
+  const [readings] = useAtom(readingsAtom);
+  const [boxes] = useAtom(boxesAtom);
   const [haveBoxes, setHaveBoxes] = useAtom(haveBoxesAtom);
-  const [showItems, setShowItems] = useState(true);
-
-  function handleClick() {
-    setShowItems(!showItems);
-  }
+  const [showBoxesItems, setShowBoxesItems] = useAtom(showBoxesItemsAtom);
 
   setHaveBoxes(
     React.useMemo(() => {
@@ -178,10 +265,10 @@ function List() {
 
   const notInBoxes = React.useMemo(() => {
     return products.filter((i) => i.isInTransportationBox == false);
-  }, [products, readings, showItems]);
+  }, [products, readings]);
 
   const InBoxes = React.useMemo(() => {
-    var boxesHolder: ProductsInBoxes[] = [];
+    let boxesHolder: ProductsInBoxes[] = [];
     products.forEach((element) => {
       if (element.isInTransportationBox) {
         let find = boxesHolder.find(
@@ -197,8 +284,46 @@ function List() {
         }
       }
     });
+    boxes.forEach((box) => {
+      let find = boxesHolder.find(
+        (i) => i.transportationBoxId == box.transportationBoxId
+      );
+      if (!find) {
+        boxesHolder.unshift(box);
+      }
+    });
+
     return boxesHolder;
-  }, [products, readings, boxes, showItems]);
+  }, [products, readings, boxes, showBoxesItems]);
+
+  React.useEffect(() => {
+    var showBoxes: ShowBoxItem[] = [];
+    products.forEach((element) => {
+      if (element.isInTransportationBox) {
+        let find = showBoxes.find(
+          (i) => i.transportationBoxId == element.transportationBoxId
+        );
+        if (!find) {
+          showBoxes.push({
+            transportationBoxId: element.transportationBoxId,
+            show: true,
+          });
+        }
+      }
+    });
+    boxes.forEach((box) => {
+      let find = showBoxes.find(
+        (i) => i.transportationBoxId == box.transportationBoxId
+      );
+      if (!find) {
+        showBoxes.push({
+          transportationBoxId: box.transportationBoxId,
+          show: false,
+        });
+      }
+    });
+    setShowBoxesItems(showBoxes);
+  }, [products, readings, boxes]);
 
   return (
     <>
@@ -207,7 +332,7 @@ function List() {
           <>
             <View style={{ marginTop: 8 }}>
               <Text style={styles.heading} role="heading" aria-level="2">
-                Artigos
+                Products
               </Text>
               <Separator />
             </View>
@@ -226,7 +351,7 @@ function List() {
                       <View style={{ marginLeft: 2, flex: 6 }}>
                         <Text style={styles.title}>{item.product?.name}</Text>
                         <Text style={styles.subTitle}>
-                          Quantidade:{" "}
+                          Quantity:{" "}
                           {
                             readings.filter((i) => i == item.product?.ean)
                               .length
@@ -241,9 +366,8 @@ function List() {
                         style={{ marginLeft: 2, flex: 4, flexDirection: "row" }}
                       >
                         <Options
-                          isBox={item.isInTransportationBox}
-                          showItems={showItems}
-                          handleClick={handleClick}
+                          isBox={false}
+                          transportationBoxId={item.transportationBoxId}
                           item={item}
                         />
                       </View>
@@ -264,7 +388,7 @@ function List() {
             <View style={{ flex: 1 }}>
               <View style={{ marginTop: 8 }}>
                 <Text style={styles.heading} role="heading" aria-level="2">
-                  Artigos em Caixas
+                  Products in Boxes
                 </Text>
                 <Separator />
               </View>
@@ -283,7 +407,7 @@ function List() {
                       >
                         <View style={{ marginLeft: 2, flex: 4 }}>
                           <Text style={styles.title}>
-                            Caixa {item.transportationBoxId}
+                            Box {item.transportationBoxId}
                           </Text>
                         </View>
                         <View
@@ -295,71 +419,71 @@ function List() {
                         >
                           <Options
                             isBox={true}
-                            showItems={showItems}
-                            handleClick={handleClick}
+                            transportationBoxId={item.transportationBoxId}
                             item={null}
                           />
                         </View>
                       </View>
                       <Separator />
-                      {showItems ? (
-                        <>
-                          <View style={{ minHeight: 100 }}>
-                            <FlashList
-                              nestedScrollEnabled={true}
-                              data={item.products}
-                              renderItem={({ item, index }) => {
-                                return (
-                                  <>
+                      {showBoxesItems.find(
+                        (i) => i.transportationBoxId == item.transportationBoxId
+                      )?.show ? (
+                        <View style={{ minHeight: 25 }}>
+                          <FlashList
+                            nestedScrollEnabled={true}
+                            data={item.products}
+                            renderItem={({ item, index }) => {
+                              return (
+                                <>
+                                  <View
+                                    style={{
+                                      flexDirection: "row",
+                                      alignItems: "center",
+                                      marginTop: 2,
+                                      marginLeft: 18,
+                                    }}
+                                  >
+                                    <View style={{ marginLeft: 2, flex: 6 }}>
+                                      <Text style={styles.title}>
+                                        {item.product.name}
+                                      </Text>
+                                      <Text style={styles.subTitle}>
+                                        Quantity:{" "}
+                                        {
+                                          readings.filter(
+                                            (i) => i == item.product?.ean
+                                          ).length
+                                        }{" "}
+                                        / {item.units}
+                                      </Text>
+                                      <Text style={styles.subTitle}>
+                                        EAN: {item.product.ean}
+                                      </Text>
+                                    </View>
                                     <View
                                       style={{
+                                        marginLeft: 2,
+                                        flex: 4,
                                         flexDirection: "row",
-                                        alignItems: "center",
-                                        marginTop: 2,
-                                        marginLeft: 18,
                                       }}
                                     >
-                                      <View style={{ marginLeft: 2, flex: 6 }}>
-                                        <Text style={styles.title}>
-                                          {item.product.name}
-                                        </Text>
-                                        <Text style={styles.subTitle}>
-                                          Quantidade:{" "}
-                                          {
-                                            readings.filter(
-                                              (i) => i == item.product?.ean
-                                            ).length
-                                          }{" "}
-                                          / {item.units}
-                                        </Text>
-                                        <Text style={styles.subTitle}>
-                                          EAN: {item.product.ean}
-                                        </Text>
-                                      </View>
-                                      <View
-                                        style={{
-                                          marginLeft: 2,
-                                          flex: 4,
-                                          flexDirection: "row",
-                                        }}
-                                      >
-                                        <Options
-                                          isBox={false}
-                                          showItems={showItems}
-                                          handleClick={handleClick}
-                                          item={item}
-                                        />
-                                      </View>
+                                      <Options
+                                        isBox={false}
+                                        transportationBoxId={
+                                          item.transportationBoxId
+                                        }
+                                        item={item}
+                                      />
                                     </View>
+                                  </View>
 
-                                    <Separator />
-                                  </>
-                                );
-                              }}
-                              estimatedItemSize={200}
-                            />
-                          </View>
-                        </>
+                                  <Separator />
+                                </>
+                              );
+                            }}
+                            estimatedItemSize={200}
+                          />
+                        </View>
                       ) : (
                         <View></View>
                       )}
@@ -390,30 +514,32 @@ function ShowCompleteButton(props: { show: Boolean }) {
       shipmentOrder.statusId = 2;
       shipmentOrder.productsInShipmentOrders = products;
       shipmentOrder.fulfilledById = parseInt(userId);
-      // products.forEach((i) => (i.fulfilledById = userId));
-      db.updateShipmentOrders(shipmentOrder);
+      db.updateLocalShipmentOrders(shipmentOrder);
       router.back();
     }
   }
 
   if (props.show) {
     return (
-      <StyledButton onPress={finishOrder} title="Finalizar" variant="default" />
+      <StyledButton onPress={finishOrder} title="Finish" variant="default" />
     );
   }
 }
 
-function FulfilledOrder(props: { productsList: ProductsInShipmentOrder[] }) {
+function FulfilledOrder(props: {
+  shipmentOrder: ShipmentOrder;
+  productsList: ProductsInShipmentOrder[];
+}) {
   return (
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: "Encomenda ",
+          title: "Order ",
         }}
       />
-
+      <ConnectionAlert body="No connection to the sorter." />
       <Text style={styles.heading} role="heading" aria-level="2">
-        Status: {" Fulfilled"}
+        Status: {OrderStatusEnum[props.shipmentOrder.statusId]}
       </Text>
       <Separator />
       <Text style={styles.heading} role="heading" aria-level="2">
@@ -422,7 +548,7 @@ function FulfilledOrder(props: { productsList: ProductsInShipmentOrder[] }) {
       <Separator />
       <View style={{ marginTop: 8 }}>
         <Text style={styles.heading} role="heading" aria-level="2">
-          Artigos
+          Products
         </Text>
         <Separator />
       </View>
@@ -440,7 +566,7 @@ function FulfilledOrder(props: { productsList: ProductsInShipmentOrder[] }) {
               >
                 <View style={{ marginLeft: 2, flex: 6 }}>
                   <Text style={styles.title}>{item.product?.name}</Text>
-                  <Text style={styles.subTitle}>Quantidade:{item.units}</Text>
+                  <Text style={styles.subTitle}>Quantity:{item.units}</Text>
                   <Text style={styles.subTitle}>EAN: {item.product?.ean}</Text>
                 </View>
                 <View
@@ -498,7 +624,7 @@ export default function App() {
     async function setup() {
       let db = new DatabaseHelper();
       if (id) {
-        let shipmentOrder = await db.getShipmentOrder(parseInt(id.toString()));
+        let shipmentOrder = await db.getShipmentOrderById(parseInt(id.toString()));
         setShipmentOrder(shipmentOrder);
 
         let products = await db.getShipmentOrdersProducts(
@@ -571,23 +697,30 @@ export default function App() {
     if (isBox) {
       var find = boxes.find((i) => i.transportationBoxId == id);
       if (!find) {
-        setBoxes([{ products: [], transportationBoxId: id }]);
+        setHasScanned(true);
+        var copy = [...boxes];
+        copy.unshift({ transportationBoxId: id, products: [] });
+        setBoxes([...copy]);
+        Toast.show({
+          type: "success",
+          text1: "Box Added Successfully",
+          visibilityTime: 1750,
+        });
       }
       return;
     }
-
     var product = products.find((i: any) => i.product?.ean == ean);
-
-    setHasScanned(true);
 
     if (product == null || product == undefined) {
       Toast.show({
         type: "error",
-        text1: "Artigo nao esta no pedido",
+        text1: "Produto is not in the order",
         visibilityTime: 1750,
       });
       return;
     }
+
+    setHasScanned(true);
 
     if (
       product?.units &&
@@ -595,14 +728,14 @@ export default function App() {
     ) {
       Toast.show({
         type: "error",
-        text1: "Todos artigos ja foram lidos",
+        text1: "All products have already been read",
         visibilityTime: 1750,
       });
     } else {
       setReadings((readings) => [...readings, ean]);
       Toast.show({
         type: "success",
-        text1: "Leitura Realizada com Sucesso",
+        text1: "Reading Completed Successfully",
         visibilityTime: 1750,
       });
     }
@@ -612,18 +745,20 @@ export default function App() {
     }, 1500);
   };
 
-  if (shipmentOrder.statusId == 2) {
-    console.log(products);
-    return <FulfilledOrder productsList={products} />;
+  if (shipmentOrder.statusId != OrderStatusEnum.Pending) {
+    return (
+      <FulfilledOrder shipmentOrder={shipmentOrder} productsList={products} />
+    );
   }
+
   return (
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: "Encomenda " + id,
+          title: "Order " + id,
         }}
       />
-      <DangerAlert body="Sem ligação ao sorter." />
+      <ConnectionAlert body="No connection to the sorter." />
 
       <CameraView
         style={styles.camera}
@@ -665,5 +800,5 @@ const styles = StyleSheet.create({
   },
   subTitle: {
     fontSize: 16,
-  }
+  },
 });

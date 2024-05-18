@@ -1,19 +1,45 @@
-export type Warehouse = {
-  id: string;
+export interface Warehouse {
+  id: number;
   name: string;
-  address: string;
+  address: any;
+  synchronizationId: string;
   createdAt: string;
   updatedAt: string;
-};
+}
 
-export type Order = {
-  id: string;
-  originId: string;
-  destinationId: string;
-  statusId: string;
+export interface ShipmentOrder {
+  id: number;
+  originId: number;
+  destinationId: number;
+  statusId: number;
   createdAt: string;
   updatedAt: string;
-};
+  synchronizationId: string;
+  fulfilledById?: number;
+  productsInShipmentOrders: ProductsInShipmentOrder[];
+  productsInBoxes: ProductsInShipmentOrder[];
+}
+
+export interface ProductsInShipmentOrder {
+  id: number
+  productId: number
+  shipmentOrderId: number
+  units: number
+  isInTransportationBox: boolean
+  transportationBoxId?: number
+  product: Product
+  transportationBox?: TransportationBox
+}
+
+export interface TransportationBox {
+  id: number
+  name: string
+  ean: string
+  isTransportationBox: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 
 export type User = {
   id: string;
@@ -32,9 +58,15 @@ export type Product = {
 };
 
 export type OrderStatus = {
-  id: string;
+  id: number;
   name: string;
   synchronizationId: string;
   createdAt: string;
   updatedAt: string;
 };
+
+export enum OrderStatusEnum {
+  Pending = 1,
+  Fulfilled = 2,
+  Canceled = 3,
+}

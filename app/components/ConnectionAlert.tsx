@@ -1,11 +1,10 @@
 import { View, Text } from "./Themed";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Pressable, StyleSheet, useColorScheme } from "react-native";
-import { DarkTheme, DefaultTheme } from "@react-navigation/native";
 import { useServerConnectionStore } from "@/Stores/serverConnectionStore";
 import Colors from "@/constants/Colors";
 
-export function DangerAlert(props: { body: string }) {
+export function ConnectionAlert(props: { body: string }) {
   const colorScheme = useColorScheme();
   const {
     hasConnection,

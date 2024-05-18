@@ -4,12 +4,11 @@ import {
   SafeAreaView,
   View,
   ScrollView,
-  Text,
   TouchableOpacity,
   Switch,
 } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { MonoText } from "@/components/StyledText";
+import { Text } from "@/components/Themed";
 import { Appearance } from "react-native";
 import { useSession } from "@/auth/ctx";
 import { useColorScheme } from "@/components/useColorScheme";
@@ -18,6 +17,7 @@ import { DatabaseHelper } from "@/db/database";
 import { Warehouse } from "@/types/types";
 import { useWarehouseStore } from "@/Stores/warehouseStore";
 import { useDarkModeStore } from "@/Stores/darkModeStore";
+import Colors from "@/constants/Colors";
 
 function WarehousePicket(props: { iconColor: string }) {
   const pickerRef = useRef<any>();
@@ -56,7 +56,6 @@ function WarehousePicket(props: { iconColor: string }) {
   return (
     <TouchableOpacity
       onPress={() => {
-        // handle onPress
         open();
       }}
       style={styles.row}
@@ -65,7 +64,7 @@ function WarehousePicket(props: { iconColor: string }) {
         <FontAwesome color={props.iconColor} name="home" size={20} />
       </View>
 
-      <MonoText style={styles.rowLabel}>Armazem</MonoText>
+      <Text style={styles.rowLabel}>Warehouse</Text>
 
       <View style={styles.rowSpacer} />
 
@@ -106,7 +105,7 @@ export default function Modal() {
     pushNotifications: false,
   });
   let isDarkMode = Appearance.getColorScheme() === "dark";
-  let iconColor = isDarkMode ? "#fff" : "#000";
+  let iconColor = isDarkMode ? Colors.dark.text : Colors.light.text;
   const { darkMode, setDarkMode } = useDarkModeStore();
 
   function editTheme(darkModeActive: boolean) {
@@ -124,52 +123,27 @@ export default function Modal() {
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <MonoText style={styles.title}>Settings</MonoText>
-
-          {/* <Text style={styles.subtitle}>
-            Lorem ipsum dolor sit amet consectetur.
-          </Text> */}
+          <Text style={styles.title}>Settings</Text>
         </View>
 
         <ScrollView>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Preferencias</Text>
+            <Text style={styles.sectionTitle}>Preferences</Text>
 
             <View style={styles.sectionBody}>
-              {/* <View style={[styles.rowWrapper, styles.rowFirst]}>
-                <TouchableOpacity
-                  onPress={() => {
-                    // handle onPress
-                  }}
-                  style={styles.row}
-                >
-                  <View style={[styles.rowIcon]}>
-                    <FontAwesome color="#fff" name="globe" size={20} />
-                  </View>
-
-                  <MonoText style={styles.rowLabel}>Language</MonoText>
-
-                  <View style={styles.rowSpacer} />
-
-                  <Text style={styles.rowValue}>English</Text>
-
-                  <FontAwesome color="#C6C6C6" name="chevron-right" size={20} />
-                </TouchableOpacity>
-              </View> */}
-
               <View style={[styles.rowWrapper, styles.rowFirst]}>
                 <View style={styles.row}>
                   <View style={[styles.rowIcon]}>
                     <FontAwesome color={iconColor} name="moon-o" size={20} />
                   </View>
 
-                  <MonoText style={styles.rowLabel}>Modo Escuro</MonoText>
+                  <Text style={styles.rowLabel}>Dark Mode</Text>
 
                   <View style={styles.rowSpacer} />
 
                   <Switch
                     trackColor={{ false: "#ccc", true: "#ccc" }}
-                    thumbColor={isDarkMode ? "#fff" : "#fff"}
+                    thumbColor="#fff"
                     ios_backgroundColor="#3e3e3e"
                     onValueChange={(darkMode) => editTheme(darkMode)}
                     value={form.darkMode}
@@ -182,7 +156,7 @@ export default function Modal() {
               </View>
             </View>
 
-            <View style={styles.section}>
+            {/* <View style={styles.section}>
               <Text style={styles.sectionTitle}>Notificações</Text>
 
               <View style={styles.sectionBody}>
@@ -192,15 +166,15 @@ export default function Modal() {
                       <FontAwesome color={iconColor} name="bell" size={20} />
                     </View>
 
-                    <MonoText style={styles.rowLabel}>
+                    <Text style={styles.rowLabel}>
                       Notificações Push
-                    </MonoText>
+                    </Text>
 
                     <View style={styles.rowSpacer} />
 
                     <Switch
                       trackColor={{ false: "#ccc", true: "#ccc" }}
-                      thumbColor={isDarkMode ? "#fff" : "#fff"}
+                      thumbColor="#fff"
                       ios_backgroundColor="#3e3e3e"
                       onValueChange={(pushNotifications) =>
                         setForm({ ...form, pushNotifications })
@@ -210,10 +184,10 @@ export default function Modal() {
                   </View>
                 </View>
               </View>
-            </View>
+            </View> */}
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Secção</Text>
+              <Text style={styles.sectionTitle}>Section</Text>
 
               <View style={styles.sectionBody}>
                 <View style={[styles.rowWrapper, styles.rowFirst]}>
@@ -233,7 +207,7 @@ export default function Modal() {
                         />
                       </View>
 
-                      <MonoText style={styles.rowLabel}>Logout</MonoText>
+                      <Text style={styles.rowLabel}>Logout</Text>
 
                       <View style={styles.rowSpacer} />
                     </TouchableOpacity>

@@ -24,7 +24,7 @@ const BackgroundSync = () => {
 
     const backgroundSyncInterval = setInterval(() => {
       syncDataInBackground();
-    }, 5 * 1000); // Execute every 30 sec
+    }, 30 * 1000); // Execute every 30 sec
 
     return () => {
       clearInterval(backgroundSyncInterval);

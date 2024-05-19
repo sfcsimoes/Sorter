@@ -15,7 +15,7 @@ export interface ShipmentOrder {
     updatedAt: string;
     synchronizationId: string;
     fulfilledById?: number;
-    // fulfilledBy: number;
+    fulfilledBy?: User;
     productsInShipmentOrders: ProductsInShipmentOrder[];
     productsInBoxes: ProductsInShipmentOrder[];
 }
@@ -83,3 +83,10 @@ export enum OrderStatusEnum {
     Fulfilled = 2,
     Canceled = 3,
 }
+
+export type User = {
+    id: number;
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+};

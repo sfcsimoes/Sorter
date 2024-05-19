@@ -28,8 +28,7 @@ export default function Header(props: { session: any }) {
     { id: 2, name: "Orders", path: "/orders", icon: Truck },
     { id: 3, name: "Products", path: "/products", icon: Package },
     { id: 4, name: "Users", path: "/users", icon: Users },
-    { id: 5, name: "Analytics", path: "/analytics", icon: LineChart },
-    { id: 6, name: "Warehouses", path: "/warehouses", icon: Warehouse },
+    { id: 5, name: "Warehouses", path: "/warehouses", icon: Warehouse },
   ];
 
   return (

@@ -14,8 +14,9 @@ import { drizzle } from "drizzle-orm/expo-sqlite";
 import { openDatabaseSync } from "expo-sqlite";
 import { View, Text, Appearance, Pressable } from "react-native";
 import { useSession } from "@/auth/ctx";
-import { useDarkModeStore } from "@/Stores/darkModeStore";
 import { useServerConnectionStore } from "@/Stores/serverConnectionStore";
+import BackgroundSync from "@/services/BackgroundSync";
+import { useInterfaceStore } from "@/Stores/interfaceStore";
 
 const expoDb = openDatabaseSync("db.db");
 const db = drizzle(expoDb);
@@ -72,7 +73,7 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const { hasConnection, setShowConnectionAlert } = useServerConnectionStore();
-  const { darkMode, setDarkMode } = useDarkModeStore();
+  const { darkMode, setDarkMode } = useInterfaceStore();
   if (darkMode) {
     Appearance.setColorScheme("dark");
   } else {
@@ -122,6 +123,7 @@ function RootLayoutNav() {
 
   return (
     <RootSiblingParent>
+      <BackgroundSync />
       <Stack>
         <Stack.Screen
           name="index"

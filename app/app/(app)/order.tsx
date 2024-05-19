@@ -14,6 +14,7 @@ import {
   ProductsInShipmentOrder,
   ShipmentOrder,
   ShowBoxItem,
+  Warehouse,
 } from "@/types/types";
 import {
   Stack,
@@ -44,6 +45,7 @@ const readingsAtom = atom<string[]>([]);
 const boxesAtom = atom<ProductsInBoxes[]>([]);
 const haveBoxesAtom = atom<boolean>(false);
 const showBoxesItemsAtom = atom<ShowBoxItem[]>([]);
+const warehousesAtom = atom<Warehouse[]>([]);
 
 function Options({ isBox, transportationBoxId, item }: AuxParameters) {
   const [readings, setReadings] = useAtom(readingsAtom);
@@ -80,13 +82,13 @@ function Options({ isBox, transportationBoxId, item }: AuxParameters) {
                 dropdownIconColor={dropDownIconColor}
                 onValueChange={(itemValue: any, itemIndex) => {
                   if (itemValue) {
-                  props.item.isInTransportationBox = true;
+                    props.item.isInTransportationBox = true;
                     props.item.transportationBoxId = itemValue;
                     setProducts((p) => [...p]);
                   }
                 }}
               >
-                <Picker.Item label="Options" />
+                <Picker.Item label="Boxes" />
                 {showBoxesItems.map(function (box) {
                   return (
                     <Picker.Item
@@ -102,11 +104,10 @@ function Options({ isBox, transportationBoxId, item }: AuxParameters) {
                   if (props.item.isInTransportationBox) {
                     props.item.isInTransportationBox = false;
                     props.item.transportationBoxId = 0;
-                     setProducts((p) => [...p]);
+                    setProducts((p) => [...p]);
                   } else {
                     open();
                   }
-                 
                 }}
                 title={undefined}
                 variant="default"
@@ -427,7 +428,7 @@ function List() {
                       <Separator />
                       {showBoxesItems.find(
                         (i) => i.transportationBoxId == item.transportationBoxId
-                      )?.show ? (
+                      )?.show && item.products.length > 0 ? (
                         <View style={{ minHeight: 25 }}>
                           <FlashList
                             nestedScrollEnabled={true}
@@ -503,8 +504,8 @@ function List() {
 }
 
 function ShowCompleteButton(props: { show: Boolean }) {
-  const [products, setProducts] = useAtom(productsAtom);
-  const [shipmentOrder, setShipmentOrder] = useAtom(shipmentOrderAtom);
+  const [products] = useAtom(productsAtom);
+  const [shipmentOrder] = useAtom(shipmentOrderAtom);
   const { session, isLoading } = useSession();
 
   async function finishOrder() {
@@ -530,55 +531,186 @@ function FulfilledOrder(props: {
   shipmentOrder: ShipmentOrder;
   productsList: ProductsInShipmentOrder[];
 }) {
+  const [warehouses, setWarehouses] = useAtom(warehousesAtom);
+
+  const notInBoxes = React.useMemo(() => {
+    return props.productsList.filter((i) => i.isInTransportationBox == false);
+  }, [props.productsList]);
+
+  const InBoxes = React.useMemo(() => {
+    let boxesHolder: ProductsInBoxes[] = [];
+    props.productsList.forEach((element) => {
+      if (element.isInTransportationBox) {
+        let find = boxesHolder.find(
+          (i) => i.transportationBoxId == element.transportationBoxId
+        );
+        if (find) {
+          find.products.push(element);
+        } else {
+          boxesHolder.push({
+            transportationBoxId: element.transportationBoxId,
+            products: [element],
+          });
+        }
+      }
+    });
+    return boxesHolder;
+  }, [props.productsList]);
+
   return (
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: "Order ",
+          title: "Order " + props.shipmentOrder.id,
         }}
       />
       <ConnectionAlert body="No connection to the sorter." />
-      <Text style={styles.heading} role="heading" aria-level="2">
+      <Text style={styles.sub_heading} role="heading" aria-level="2">
+        Origin:{" "}
+        {
+          warehouses.find(
+            (warehouse) => warehouse.id == props.shipmentOrder.originId
+          )?.name
+        }
+      </Text>
+      <Separator />
+      <Text style={styles.sub_heading} role="heading" aria-level="2">
+        Destination:{" "}
+        {
+          warehouses.find(
+            (warehouse) => warehouse.id == props.shipmentOrder.destinationId
+          )?.name
+        }
+      </Text>
+      <Separator />
+      <Text style={styles.sub_heading} role="heading" aria-level="2">
         Status: {OrderStatusEnum[props.shipmentOrder.statusId]}
       </Text>
       <Separator />
-      <Text style={styles.heading} role="heading" aria-level="2">
-        Fulfilled By: {" Fulfilled"}
+      <Text style={styles.sub_heading} role="heading" aria-level="2">
+        Fulfilled By: {props.shipmentOrder.fulfilledBy?.name}
       </Text>
       <Separator />
-      <View style={{ marginTop: 8 }}>
-        <Text style={styles.heading} role="heading" aria-level="2">
-          Products
-        </Text>
-        <Separator />
-      </View>
-      <FlashList
-        data={props.productsList}
-        renderItem={({ item, index }) => {
-          return (
-            <>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginTop: 2,
-                }}
-              >
-                <View style={{ marginLeft: 2, flex: 6 }}>
-                  <Text style={styles.title}>{item.product?.name}</Text>
-                  <Text style={styles.subTitle}>Quantity:{item.units}</Text>
-                  <Text style={styles.subTitle}>EAN: {item.product?.ean}</Text>
-                </View>
-                <View
-                  style={{ marginLeft: 2, flex: 4, flexDirection: "row" }}
-                ></View>
-              </View>
-              <Separator />
-            </>
-          );
-        }}
-        estimatedItemSize={200}
-      />
+      {notInBoxes.length > 0 ? (
+        <>
+          <View style={{ marginTop: 8 }}>
+            <Text style={styles.heading} role="heading" aria-level="2">
+              Products
+            </Text>
+            <Separator />
+          </View>
+          <FlashList
+            data={notInBoxes}
+            renderItem={({ item, index }) => {
+              return (
+                <>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginTop: 2,
+                    }}
+                  >
+                    <View style={{ marginLeft: 2, flex: 6 }}>
+                      <Text style={styles.title}>{item.product?.name}</Text>
+                      <Text style={styles.subTitle}>
+                        Quantity: {item.units}
+                      </Text>
+                      <Text style={styles.subTitle}>
+                        EAN: {item.product?.ean}
+                      </Text>
+                    </View>
+                    <View
+                      style={{ marginLeft: 2, flex: 4, flexDirection: "row" }}
+                    ></View>
+                  </View>
+                  <Separator />
+                </>
+              );
+            }}
+            estimatedItemSize={200}
+          />
+        </>
+      ) : (
+        <View></View>
+      )}
+
+      {InBoxes.length > 0 ? (
+        <>
+          <View style={{ marginTop: 8 }}>
+            <Text style={styles.heading} role="heading" aria-level="2">
+              Products in Boxes
+            </Text>
+            <Separator />
+          </View>
+          <FlashList
+            nestedScrollEnabled={true}
+            data={InBoxes}
+            renderItem={({ item, index }) => {
+              return (
+                <>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginTop: 2,
+                    }}
+                  >
+                    <View style={{ marginLeft: 2, flex: 4 }}>
+                      <Text style={styles.title}>
+                        Box {item.transportationBoxId}
+                      </Text>
+                    </View>
+                  </View>
+                  <Separator />
+                  {item.products.length > 0 ? (
+                    <View style={{ minHeight: 25 }}>
+                      <FlashList
+                        nestedScrollEnabled={true}
+                        data={item.products}
+                        renderItem={({ item, index }) => {
+                          return (
+                            <>
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  marginTop: 2,
+                                  marginLeft: 18,
+                                }}
+                              >
+                                <View style={{ marginLeft: 2, flex: 6 }}>
+                                  <Text style={styles.title}>
+                                    {item.product.name}
+                                  </Text>
+                                  <Text style={styles.subTitle}>
+                                    Quantity: {item.units}
+                                  </Text>
+                                  <Text style={styles.subTitle}>
+                                    EAN: {item.product.ean}
+                                  </Text>
+                                </View>
+                              </View>
+
+                              <Separator />
+                            </>
+                          );
+                        }}
+                        estimatedItemSize={200}
+                      />
+                    </View>
+                  ) : (
+                    <View></View>
+                  )}
+                </>
+              );
+            }}
+            estimatedItemSize={200}
+          />
+        </>
+      ) : (
+        <View></View>
+      )}
     </View>
   );
 }
@@ -592,6 +724,7 @@ export default function App() {
   const [readings, setReadings] = useAtom(readingsAtom);
   const [shipmentOrder, setShipmentOrder] = useAtom(shipmentOrderAtom);
   const [boxes, setBoxes] = useAtom(boxesAtom);
+  const [warehouses, setWarehouses] = useAtom(warehousesAtom);
 
   const totalOrderUnits = React.useMemo(
     () =>
@@ -624,13 +757,17 @@ export default function App() {
     async function setup() {
       let db = new DatabaseHelper();
       if (id) {
-        let shipmentOrder = await db.getShipmentOrderById(parseInt(id.toString()));
+        let shipmentOrder = await db.getShipmentOrderById(
+          parseInt(id.toString())
+        );
         setShipmentOrder(shipmentOrder);
 
         let products = await db.getShipmentOrdersProducts(
           parseInt(id.toString())
         );
         setProducts(products);
+
+        setWarehouses(await db.getWarehouses());
 
         products
           .filter((i: any) => i.isInTransportationBox == true)
@@ -647,6 +784,14 @@ export default function App() {
     }
     setup();
   }, []);
+
+  React.useEffect(() => {
+    if (hasScanned) {
+      setTimeout(() => {
+        setHasScanned(false);
+      }, 1500);
+    }
+  }, [hasScanned]);
 
   if (!permission) {
     // Camera permissions are still loading
@@ -671,6 +816,7 @@ export default function App() {
     let ean = "";
     let isBox = false;
     let id = 0;
+
     switch (props.type) {
       case 256:
         var json = JSON.parse(props.data);
@@ -696,14 +842,20 @@ export default function App() {
 
     if (isBox) {
       var find = boxes.find((i) => i.transportationBoxId == id);
+      setHasScanned(true);
       if (!find) {
-        setHasScanned(true);
         var copy = [...boxes];
         copy.unshift({ transportationBoxId: id, products: [] });
         setBoxes([...copy]);
         Toast.show({
           type: "success",
           text1: "Box Added Successfully",
+          visibilityTime: 1750,
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Box already added",
           visibilityTime: 1750,
         });
       }
@@ -739,10 +891,6 @@ export default function App() {
         visibilityTime: 1750,
       });
     }
-
-    setTimeout(() => {
-      setHasScanned(false);
-    }, 1500);
   };
 
   if (shipmentOrder.statusId != OrderStatusEnum.Pending) {
@@ -791,6 +939,10 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: 28,
+    fontWeight: "bold",
+  },
+  sub_heading: {
+    fontSize: 20,
     fontWeight: "bold",
   },
   title: {

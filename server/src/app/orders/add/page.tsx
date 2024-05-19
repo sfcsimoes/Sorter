@@ -140,7 +140,7 @@ export default function Component() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const [data, setData] = React.useState<Product[]>([]);
+const [data, setData] = React.useState<Product[]>([]);
 
   const productSchema = z.object({
     id: z.string(),

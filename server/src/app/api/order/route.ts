@@ -47,9 +47,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
 
   await db.transaction(async (tx) => {
     try {
-      console.log(data)
       var order = orderObject.parse(data);
-      console.log(order)
 
       var shipmentOrderId = await tx
         .insert(shipmentOrders)

@@ -16,8 +16,8 @@ import { Picker } from "@react-native-picker/picker";
 import { DatabaseHelper } from "@/db/database";
 import { Warehouse } from "@/types/types";
 import { useWarehouseStore } from "@/Stores/warehouseStore";
-import { useDarkModeStore } from "@/Stores/darkModeStore";
 import Colors from "@/constants/Colors";
+import { useInterfaceStore } from "@/Stores/interfaceStore";
 
 function WarehousePicket(props: { iconColor: string }) {
   const pickerRef = useRef<any>();
@@ -106,7 +106,7 @@ export default function Modal() {
   });
   let isDarkMode = Appearance.getColorScheme() === "dark";
   let iconColor = isDarkMode ? Colors.dark.text : Colors.light.text;
-  const { darkMode, setDarkMode } = useDarkModeStore();
+  const { darkMode, setDarkMode } = useInterfaceStore();
 
   function editTheme(darkModeActive: boolean) {
     if (darkModeActive) {

@@ -18,15 +18,15 @@ export const createTable = sqliteTableCreator((name) => `${name}`);
 export const users = createTable('users', {
 	id: int('id', { mode: 'number' }).primaryKey(),
 	name: text('name').notNull(),
-	email: text('email').notNull(),
-	password: text('password').notNull(),
-	settings: text('settings', { mode: 'json' }),
+	// email: text('email').notNull(),
+	// password: text('password').notNull(),
+	// settings: text('settings', { mode: 'json' }),
 	createdAt: text("createdAt").default(sql`CURRENT_TIMESTAMP`),
 	updatedAt: text("updatedAt").default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
-	productsInShipmentOrders: many(shipmentOrders),
+	shipmentOrders: many(shipmentOrders),
 }));
 
 export const warehouses = createTable('warehouses', {

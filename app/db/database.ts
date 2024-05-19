@@ -1,14 +1,15 @@
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import { openDatabaseSync, deleteDatabaseAsync } from "expo-sqlite";
 import * as schema from "@/db/schema";
-import { ConsoleLogWriter, eq, isNull } from "drizzle-orm";
+import { ConsoleLogWriter, eq, isNull, asc, desc } from "drizzle-orm";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import migrations from "@/drizzle/migrations.js";
-import { OrderStatus, Product, ShipmentOrder, SyncOrders, Warehouse } from "@/types/types";
+import { OrderStatus, Product, ShipmentOrder, SyncOrders, User, Warehouse } from "@/types/types";
 import uuid from 'react-native-uuid';
 import { useServerConnectionStore } from "@/Stores/serverConnectionStore";
-
+import { useInterfaceStore } from "@/Stores/interfaceStore";
 const connectionStore = useServerConnectionStore.getState();
+const interfaceStore = useInterfaceStore.getState();
 
 export class DatabaseHelper {
     public db: any;
@@ -18,12 +19,14 @@ export class DatabaseHelper {
         this.db = drizzle(this.expo, { schema });
     }
 
-    async useFetch(url: any, method: any, body: any) {
+    async useFetch(url: any, method: any, body: any, maxTime: number = 15) {
         let data;
         let wasSuccessful = true;
+        const controller = new AbortController();
 
         const requestOptions: RequestInit = {
             method: method,
+            signal: controller.signal
         };
 
         if (method != 'GET') {
@@ -31,12 +34,16 @@ export class DatabaseHelper {
         }
 
         try {
+            setTimeout(() => controller.abort(), 1000 * maxTime);
             const response = await fetch(process.env.EXPO_PUBLIC_API_URL + url, requestOptions);
+
             data = JSON.parse(await response.text());
             if (response.status != 200) {
                 throw ''
             }
-
+            if (!connectionStore.hasConnection) {
+                connectionStore.setConnection(true);
+            }
         } catch (e) {
             connectionStore.setConnection(false)
             wasSuccessful = false;
@@ -73,13 +80,18 @@ export class DatabaseHelper {
 
     async getShipmentOrderById(id: number) {
         return await this.db.query.shipmentOrders.findFirst({
-            where: eq(schema.shipmentOrders.id, id)
+            where: eq(schema.shipmentOrders.id, id),
+            with: {
+                fulfilledBy: true
+            },
+            orderBy: [desc(schema.shipmentOrders.id)],
         });
     }
 
     async getShipmentOrdersByOrigin(id: number) {
         return await this.db.query.shipmentOrders.findMany({
-            where: eq(schema.shipmentOrders.originId, id)
+            where: eq(schema.shipmentOrders.originId, id),
+            orderBy: [desc(schema.shipmentOrders.id)],
         });
     }
 
@@ -109,11 +121,30 @@ export class DatabaseHelper {
 
     async getSyncOrders() {
         try {
-            return await this.db.query.syncOrders.findMany();
+            return await this.db.query.syncOrders.findMany(
+                {
+                    where: isNull(schema.syncOrders.synced)
+                }
+            );
         } catch (e) {
             console.log(e)
         }
         return [];
+    }
+
+    async syncUsers() {
+        const result = await this.useFetch("/api/users", "GET", "");
+
+        if (result.wasSuccessful) {
+            result.data.forEach(async (user: User) => {
+                const userLocal = await this.db.query.users.findFirst({
+                    where: eq(schema.users.id, user.id)
+                });
+                if (!userLocal) {
+                    await this.db.insert(schema.users).values(user);
+                }
+            });
+        }
     }
 
     async syncWarehouses() {
@@ -132,15 +163,9 @@ export class DatabaseHelper {
     }
 
     async syncShipmentOrders(id: number) {
-
-        const controller = new AbortController();
-
-        const response = await fetch(process.env.EXPO_PUBLIC_API_URL + "/api/orders?id=" + id, { signal: controller.signal });
-
-        setTimeout(() => controller.abort(), 1000 * 15);
-        if (response.status == 200) {
-            let result = JSON.parse(await response.text());
-            result.forEach(async (shipmentOrder: ShipmentOrder) => {
+        const result = await this.useFetch("/api/orders?id=" + id, "GET", "", 10);
+        if (result.wasSuccessful) {
+            result.data.forEach(async (shipmentOrder: ShipmentOrder) => {
                 let shipmentOrderLocal = await this.db.query.shipmentOrders.findFirst({
                     where: eq(schema.shipmentOrders.id, shipmentOrder.id)
                 });
@@ -206,6 +231,7 @@ export class DatabaseHelper {
     }
 
     async sendShipmentOrders() {
+        let updated = 0;
         let syncOrders: SyncOrders[] = await this.db.query.syncOrders.findMany(
             {
                 where: isNull(schema.syncOrders.synced)
@@ -227,8 +253,9 @@ export class DatabaseHelper {
                     }
                 );
                 if (request.status == 200) {
+                    updated = updated + 1;
                     await this.db.update(schema.syncOrders)
-                        .set({ synced: new Date() })
+                        .set({ synced: new Date().toISOString() })
                         .where(eq(schema.syncOrders.id, element.id))
                 } else {
                     throw "Erro";
@@ -237,6 +264,12 @@ export class DatabaseHelper {
                 console.log(e);
             }
         });
+        if (updated > 0) {
+            console.log('Inside')
+            interfaceStore.setRefresh(true);
+        } else {
+            interfaceStore.setRefresh(false);
+        }
     }
 
     async updateLocalShipmentOrders(shipmentOrder: ShipmentOrder) {

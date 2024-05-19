@@ -25,7 +25,7 @@ export const users = createTable('users', {
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
-	productsInShipmentOrders: many(shipmentOrders),
+	shipmentOrders: many(shipmentOrders),
 }));
 
 export const warehouses = createTable('warehouses', {

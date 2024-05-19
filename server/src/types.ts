@@ -40,7 +40,6 @@ export interface TransportationBox {
   updatedAt: string
 }
 
-
 export type User = {
   id: string;
   name: string;
@@ -69,4 +68,10 @@ export enum OrderStatusEnum {
   Pending = 1,
   Fulfilled = 2,
   Canceled = 3,
+}
+
+export type SyncOrders = {
+  id: number;
+  shipmentOrderId: string;
+  synced: string;
 }

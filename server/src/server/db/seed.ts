@@ -102,6 +102,16 @@ await db.insert(shipmentOrders).values([
     originId: 2,
     destinationId: 3,
     statusId: 1,
+  },
+  {
+    originId: 1,
+    destinationId: 4,
+    statusId: 1,
+  },
+  {
+    originId: 1,
+    destinationId: 5,
+    statusId: 1,
   }
 ]);
 
@@ -148,5 +158,19 @@ await db.insert(productsInShipmentOrders).values([
     units: 2,
     isInTransportationBox: true,
     transportationBoxId: 6
+  },
+  {
+    shipmentOrderId: 4,
+    productId: 3,
+    units: 2,
+    isInTransportationBox: false,
+    transportationBoxId: null
+  },
+  {
+    shipmentOrderId: 5,
+    productId: 4,
+    units: 2,
+    isInTransportationBox: true,
+    transportationBoxId: 7
   },
 ]);

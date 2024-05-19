@@ -11,16 +11,23 @@ import { Text, TextInput, View } from "@/components/Themed";
 import { FlashList } from "@shopify/flash-list";
 import { Link, Stack, useNavigation } from "expo-router";
 import { DatabaseHelper } from "@/db/database";
-import { OrderStatus, ShipmentOrder, Warehouse } from "@/types/types";
+import {
+  OrderStatus,
+  ShipmentOrder,
+  SyncOrders,
+  Warehouse,
+} from "@/types/types";
 import { useWarehouseStore } from "@/Stores/warehouseStore";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import BackgroundSync from "@/services/BackgroundSync";
 import { format } from "date-fns";
 import { ConnectionAlert } from "@/components/ConnectionAlert";
-import {  useColorScheme } from "react-native";
+import { useColorScheme } from "react-native";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import Colors from "@/constants/Colors";
 import Separator from "@/components/Separator";
+import { useServerConnectionStore } from "@/Stores/serverConnectionStore";
+import { SynchronizationAlert } from "@/components/SynchronizationAlert";
+import { useInterfaceStore } from "@/Stores/interfaceStore";
 
 export default function Orders() {
   const [text, onChangeText] = React.useState("");
@@ -30,8 +37,10 @@ export default function Orders() {
   const { warehouseId } = useWarehouseStore();
   const [refreshing, setRefreshing] = React.useState(false);
   const [showFilters, setShowFilters] = React.useState(false);
+  const [syncOrders, setSyncOrders] = React.useState<SyncOrders[]>([]);
   const colorScheme = useColorScheme();
-  const value = new Date();
+  const { hasConnection } = useServerConnectionStore();
+  const { refresh } = useInterfaceStore();
 
   // Navigation
   const navigation = useNavigation();
@@ -46,23 +55,23 @@ export default function Orders() {
   }, []);
 
   React.useEffect(() => {
+    let db = new DatabaseHelper();
     async function setup() {
-      var db = new DatabaseHelper();
       if (warehouseId) {
-        await db.syncWarehouses();
-        setOrderStatus(await db.getOrderStatus());
-        db.sendShipmentOrders();
-        setWarehouse(await db.getWarehouse(warehouseId));
-        const result = await db.getShipmentOrdersByOrigin(warehouseId);
-        setOrders(result);
-        try {
+        if (hasConnection) {
           await db.syncShipmentOrders(warehouseId);
-        } catch (error) {}
+          await db.sendShipmentOrders();
+        }
+        setOrderStatus(await db.getOrderStatus());
+        setWarehouse(await db.getWarehouse(warehouseId));
+        setOrders(await db.getShipmentOrdersByOrigin(warehouseId));
+        setSyncOrders(await db.getSyncOrders());
+        // await db.syncWarehouses();
         setRefreshing(false);
       }
     }
     setup();
-  }, [warehouseId, refreshing]);
+  }, [warehouseId, refreshing, refresh]);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -72,6 +81,7 @@ export default function Orders() {
   const [dateEnd, setDateEnd] = React.useState<Date>(new Date());
   const [showDateEndText, setShowDateEndText] = React.useState(false);
   const [showDateStartText, setShowDateStartText] = React.useState(false);
+  const { showAlert, setShowAlert } = useInterfaceStore();
 
   const onChange = (_event: any, selectedDate: any) => {
     const currentDate = selectedDate;
@@ -120,11 +130,42 @@ export default function Orders() {
       );
     }
     return orders;
-  }, [orders, text, dateStart, dateEnd]);
+  }, [orders, text, dateStart, dateEnd, syncOrders, refreshing]);
+
+  function AwaitingSync(props: { id: number }) {
+    if (
+      syncOrders &&
+      syncOrders.findIndex(
+        (syncOrder) => syncOrder.shipmentOrderId == props.id
+      ) > -1 &&
+      !hasConnection
+    ) {
+      return (
+        <View
+          style={{
+            justifyContent: "center",
+            padding: 4,
+          }}
+        >
+          <Pressable
+            style={{ marginStart: "auto" }}
+            onPress={() => {
+              setShowAlert(true);
+            }}
+          >
+            <FontAwesome
+              style={{ color: "rgb(255, 215, 0)" }}
+              name="warning"
+              size={24}
+            />
+          </Pressable>
+        </View>
+      );
+    }
+  }
 
   return (
     <SafeAreaView>
-      <BackgroundSync />
       <Stack.Screen
         options={{
           title: warehouse?.name || "Warehouse",
@@ -137,7 +178,7 @@ export default function Orders() {
       >
         <View style={styles.container}>
           <ConnectionAlert body="No connection to the sorter." />
-
+          <SynchronizationAlert body="Order waiting for synchronization" />
           <View
             style={{
               width: "100%",
@@ -175,7 +216,7 @@ export default function Orders() {
             />
           </View>
           {showFilters ? (
-            <View style={{ marginStart: 8 }}>
+            <View style={{ marginStart: 10 }}>
               <View style={styles.row}>
                 <FontAwesome
                   name="calendar"
@@ -189,6 +230,7 @@ export default function Orders() {
                   }}
                 />
                 <Pressable
+                  style={{ width: "45%" }}
                   onPress={() => {
                     showDateStart("date");
                   }}
@@ -211,6 +253,7 @@ export default function Orders() {
                 </Pressable>
                 <Text> - </Text>
                 <Pressable
+                  style={{ width: "45%" }}
                   onPress={() => {
                     showDateEnd("date");
                   }}
@@ -234,7 +277,6 @@ export default function Orders() {
           ) : (
             <View></View>
           )}
-
           <View
             style={{
               marginTop: 8,
@@ -266,6 +308,7 @@ export default function Orders() {
                               )}
                             </Text>
                           </View>
+
                           <View style={{ flex: 2, justifyContent: "center" }}>
                             <Text style={styles.title}>
                               {
@@ -274,8 +317,10 @@ export default function Orders() {
                               }
                             </Text>
                           </View>
+                          <AwaitingSync id={item.id} />
                         </Pressable>
                       </Link>
+
                       <Separator />
                     </>
                   );
@@ -330,15 +375,6 @@ const styles = StyleSheet.create({
     margin: 4,
     borderWidth: 1,
     padding: 10,
-    // width: "90%",
-    borderRadius: 5,
-  },
-  hourInput: {
-    height: 40,
-    margin: 4,
-    borderWidth: 1,
-    padding: 10,
-    // width: "90%",
     borderRadius: 5,
   },
 });

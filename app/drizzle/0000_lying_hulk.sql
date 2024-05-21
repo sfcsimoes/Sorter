@@ -2,8 +2,8 @@ CREATE TABLE `orderStatus` (
 	`id` integer PRIMARY KEY NOT NULL,
 	`name` text,
 	`synchronizationId` text,
-	`createdAt` text DEFAULT (CURRENT_TIMESTAMP),
-	`updatedAt` text DEFAULT (CURRENT_TIMESTAMP)
+	`createdAt` text DEFAULT (datetime('now')),
+	`updatedAt` text DEFAULT (datetime('now'))
 );
 --> statement-breakpoint
 CREATE TABLE `products` (
@@ -12,8 +12,8 @@ CREATE TABLE `products` (
 	`ean` text,
 	`isTransportationBox` integer,
 	`synchronizationId` text,
-	`createdAt` text DEFAULT (CURRENT_TIMESTAMP),
-	`updatedAt` text DEFAULT (CURRENT_TIMESTAMP)
+	`createdAt` text DEFAULT (datetime('now')),
+	`updatedAt` text DEFAULT (datetime('now'))
 );
 --> statement-breakpoint
 CREATE TABLE `productsInShipmentOrders` (
@@ -35,8 +35,8 @@ CREATE TABLE `shipmentOrders` (
 	`statusId` integer,
 	`synchronizationId` text,
 	`fulfilledById` integer,
-	`createdAt` text DEFAULT (CURRENT_TIMESTAMP),
-	`updatedAt` text DEFAULT (CURRENT_TIMESTAMP),
+	`createdAt` text DEFAULT (datetime('now')),
+	`updatedAt` text DEFAULT (datetime('now')),
 	FOREIGN KEY (`originId`) REFERENCES `warehouses`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`destinationId`) REFERENCES `warehouses`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`statusId`) REFERENCES `orderStatus`(`id`) ON UPDATE no action ON DELETE no action,
@@ -53,11 +53,8 @@ CREATE TABLE `syncOrders` (
 CREATE TABLE `users` (
 	`id` integer PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
-	`email` text NOT NULL,
-	`password` text NOT NULL,
-	`settings` text,
-	`createdAt` text DEFAULT CURRENT_TIMESTAMP,
-	`updatedAt` text DEFAULT CURRENT_TIMESTAMP
+	`createdAt` text DEFAULT (datetime('now')),
+	`updatedAt` text DEFAULT (datetime('now'))
 );
 --> statement-breakpoint
 CREATE TABLE `warehouses` (
@@ -65,6 +62,6 @@ CREATE TABLE `warehouses` (
 	`name` text,
 	`address` text,
 	`synchronizationId` text,
-	`createdAt` text DEFAULT (CURRENT_TIMESTAMP),
-	`updatedAt` text DEFAULT (CURRENT_TIMESTAMP)
+	`createdAt` text DEFAULT (datetime('now')),
+	`updatedAt` text DEFAULT (datetime('now'))
 );

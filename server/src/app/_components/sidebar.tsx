@@ -2,17 +2,13 @@
 
 import Link from "next/link";
 import {
-  Bell,
   Home,
-  LineChart,
   Package,
   Package2,
   Users,
   Truck,
   Warehouse
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
 import { usePathname } from "next/navigation";
 
 export default function SideBar() {
@@ -35,10 +31,6 @@ export default function SideBar() {
             <Package2 className="h-6 w-6" />
             <span className="">Worter Smart Solver</span>
           </Link>
-          {/* <Button variant="outline" size="icon" className="ml-auto h-8 w-8">
-            <Bell className="h-4 w-4" />
-            <span className="sr-only">Toggle notifications</span>
-          </Button> */}
         </div>
         <div className="flex-1">
           <nav className="grid items-start px-2 text-sm font-medium lg:px-4">

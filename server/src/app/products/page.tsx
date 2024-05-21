@@ -55,6 +55,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/components/ui/use-toast";
 import { atom, useAtom } from "jotai";
 import { Product } from "@/types";
+import utcToLocal from "@/helpers/dateHelper";
 
 const sheetAtom = atom(false);
 const sheetUpdateAtom = atom(false);
@@ -100,30 +101,16 @@ export const columns: ColumnDef<Product>[] = [
   {
     accessorKey: "createdAt",
     header: "Created",
-    cell: ({ row }) => (
-      <div className="capitalize">    {new Date(row.getValue("createdAt")).toLocaleDateString(navigator.language, {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })}</div>
-    ),
+    cell: ({ row }) => {
+      return utcToLocal(row.getValue("createdAt"));
+    },
   },
   {
     accessorKey: "updatedAt",
     header: "Updated",
-    cell: ({ row }) => (
-      <div className="capitalize">    {new Date(row.getValue("updatedAt")).toLocaleDateString(navigator.language, {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })}</div>
-    ),
+    cell: ({ row }) => {
+      return utcToLocal(row.getValue("updatedAt"));
+    },
   },
   {
     id: "actions",
@@ -453,9 +440,7 @@ export default function DataTableDemo() {
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                >
+                <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(

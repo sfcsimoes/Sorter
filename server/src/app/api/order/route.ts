@@ -39,9 +39,9 @@ export async function POST(req: NextRequest, res: NextResponse) {
   });
 
   const orderObject = z.object({
-    originId: z.string(),
-    destinationId: z.string(),
-    statusId: z.string(),
+    originId: z.number(),
+    destinationId: z.number(),
+    statusId: z.number(),
     products: z.array(productSchema),
   });
 
@@ -52,9 +52,9 @@ export async function POST(req: NextRequest, res: NextResponse) {
       var shipmentOrderId = await tx
         .insert(shipmentOrders)
         .values({
-          originId: parseInt(order.originId),
-          destinationId: parseInt(order.destinationId),
-          statusId: parseInt(order.statusId),
+          originId: order.originId,
+          destinationId: order.destinationId,
+          statusId: order.statusId,
         })
         .returning({ insertedId: shipmentOrders.id });
 

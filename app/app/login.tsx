@@ -6,12 +6,41 @@ import { StyleSheet, useColorScheme } from "react-native";
 import { Text, TextInput, View, Button } from "@/components/Themed";
 import StyledButton from "@/components/StyledButton";
 import { Image } from "expo-image";
+import { useForm, Controller } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Alert } from "@/components/Alert";
 
-export default function SignIn() {
+export default function Login() {
   const { signIn } = useSession();
-  const [email, onChangeEmail] = React.useState("");
-  const [password, onChangePassword] = React.useState("");
   const colorScheme = useColorScheme();
+  const [show, setShow] = React.useState(false);
+  const [serverError, setServerError] = React.useState("");
+
+  const formSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(6, {
+      message: "Password must be at least 6 characters.",
+    }),
+  });
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+      var result = await signIn(data.email, data.password);
+      if (result) {
+        router.replace("/");
+      }else{
+        setShow(true);
+        setServerError("Invalid Credentials");
+      }
+  };
 
   return (
     <View style={styles.container}>
@@ -24,38 +53,56 @@ export default function SignIn() {
         style={styles.image}
         contentFit="none"
       />
+      <Alert show={show} type="danger" body={serverError} />
       <Text style={styles.label}>Email</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        autoComplete="email"
-        textContentType="emailAddress"
-        onChangeText={onChangeEmail}
-        value={email}
+      <Controller
+        control={form.control}
+        render={({ field: { onChange, onBlur, value } }) => (
+          <>
+            <TextInput
+              style={styles.input}
+              onBlur={onBlur}
+              onChangeText={(value) => onChange(value)}
+              value={value}
+              placeholder="Email"
+              autoComplete="email"
+              textContentType="emailAddress"
+            />
+            <Text style={styles.errorText}>
+              {form.formState.errors.email?.message}
+            </Text>
+          </>
+        )}
+        name="email"
+        rules={{ required: true }}
       />
 
       <Text style={styles.label}>Password</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        onChangeText={onChangePassword}
-        autoComplete="password"
-        textContentType="password"
-        secureTextEntry={true}
-        value={password}
+      <Controller
+        control={form.control}
+        render={({ field: { onChange, onBlur, value } }) => (
+          <>
+            <TextInput
+              style={styles.input}
+              onBlur={onBlur}
+              onChangeText={(value) => onChange(value)}
+              value={value}
+              autoComplete="password"
+              textContentType="password"
+              secureTextEntry={true}
+            />
+            <Text style={styles.errorText}>
+              {form.formState.errors.password?.message}
+            </Text>
+          </>
+        )}
+        name="password"
+        rules={{ required: true }}
       />
 
       <View style={{ width: "100%", marginTop: 14 }}>
         <StyledButton
-          onPress={async () => {
-            var result = await signIn(email, password);
-            if (result) {
-              router.replace("/");
-            }
-            // Navigate after signing in. You may want to tweak this to ensure sign-in is
-            // successful before navigating.
-            //
-          }}
+          onPress={form.handleSubmit(onSubmit)}
           title="Login"
           variant="default"
         />
@@ -82,6 +129,9 @@ const styles = StyleSheet.create({
     padding: 10,
     width: "100%",
     borderRadius: 5,
+  },
+  errorText: {
+    color: "rgba(239, 68, 68, 0.75)",
   },
   image: {
     width: "100%",

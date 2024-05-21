@@ -38,6 +38,7 @@ import { Badge } from "@/components/ui/badge";
 import { atom, useAtom } from "jotai";
 import Link from "next/link";
 import { ShipmentOrder, OrderStatus, Warehouse } from "@/types";
+import utcToLocal from "@/helpers/dateHelper";
 
 const sheetAtom = atom(false);
 const orderAtom = atom<any>({
@@ -67,7 +68,14 @@ export const columns: ColumnDef<ShipmentOrder>[] = [
   {
     accessorKey: "id",
     header: "Id",
-    cell: ({ row }) => <div className="capitalize">{row.getValue("id")}</div>,
+    cell: ({ row }) => (
+      <Link
+        href={`/orders/${row.getValue("id")}`}
+        className="font-medium  underline"
+      >
+        {row.getValue("id")}
+      </Link>
+    ),
   },
   {
     accessorKey: "originId",
@@ -112,34 +120,16 @@ export const columns: ColumnDef<ShipmentOrder>[] = [
   {
     accessorKey: "createdAt",
     header: "Created",
-    cell: ({ row }) => (
-      <div className="capitalize">
-        {new Date(row.getValue("createdAt")).toLocaleDateString(navigator.language, {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })}
-      </div>
-    ),
+    cell: ({ row }) => {
+      return utcToLocal(row.getValue("createdAt"));
+    },
   },
   {
     accessorKey: "updatedAt",
     header: "Updated",
-    cell: ({ row }) => (
-      <div className="capitalize">
-        {new Date(row.getValue("updatedAt")).toLocaleDateString(navigator.language, {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })}
-      </div>
-    ),
+    cell: ({ row }) => {
+      return utcToLocal(row.getValue("updatedAt"));
+    },
   },
 ];
 
@@ -205,14 +195,12 @@ export default function OrdersTable() {
     },
   });
 
-
   return (
     <div className="w-full space-y-1.5 p-6">
       <div className="flex items-center">
         <h1 className="text-lg font-semibold md:text-2xl">Orders</h1>
       </div>
       <div className="flex items-center py-4">
-        {/* <AddOrder /> */}
         <Link href="/orders/add">
           <Button size="default" className="gap-1">
             <PlusCircle className="h-3.5 w-3.5" />
@@ -221,7 +209,6 @@ export default function OrdersTable() {
             </span>
           </Button>
         </Link>
-        {/* <EditOrder /> */}
 
         <div className="ms-auto">
           <DropdownMenu>
@@ -243,9 +230,7 @@ export default function OrdersTable() {
                 }
                 // onValueChange={setPosition}
                 onValueChange={(event) =>
-                  table
-                    .getColumn("statusId")
-                    ?.setFilterValue(event)
+                  table.getColumn("statusId")?.setFilterValue(event)
                 }
               >
                 <DropdownMenuRadioItem value="1">Pending</DropdownMenuRadioItem>

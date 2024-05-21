@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "f8f8e19e-a3c1-4b8d-8375-e69b53fb6058",
+  "id": "206e1eb1-0564-4d88-aa2d-e1e71b7412fe",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "orderStatus": {
@@ -34,7 +34,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "default": "(datetime('now'))"
         },
         "updatedAt": {
           "name": "updatedAt",
@@ -42,7 +42,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "default": "(datetime('now'))"
         }
       },
       "indexes": {},
@@ -94,7 +94,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "default": "(datetime('now'))"
         },
         "updatedAt": {
           "name": "updatedAt",
@@ -102,7 +102,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "default": "(datetime('now'))"
         }
       },
       "indexes": {},
@@ -252,7 +252,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "default": "(datetime('now'))"
         },
         "updatedAt": {
           "name": "updatedAt",
@@ -260,7 +260,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "default": "(datetime('now'))"
         }
       },
       "indexes": {},
@@ -382,34 +382,13 @@
           "notNull": true,
           "autoincrement": false
         },
-        "email": {
-          "name": "email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "password": {
-          "name": "password",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "settings": {
-          "name": "settings",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "createdAt": {
           "name": "createdAt",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now'))"
         },
         "updatedAt": {
           "name": "updatedAt",
@@ -417,7 +396,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now'))"
         }
       },
       "indexes": {},
@@ -462,7 +441,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "default": "(datetime('now'))"
         },
         "updatedAt": {
           "name": "updatedAt",
@@ -470,7 +449,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(CURRENT_TIMESTAMP)"
+          "default": "(datetime('now'))"
         }
       },
       "indexes": {},

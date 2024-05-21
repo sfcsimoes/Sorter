@@ -23,8 +23,6 @@ export default function Root() {
   React.useEffect(() => {
     async function setup() {
       var db = new DatabaseHelper();
-      // await db.dropDatabase();
-      // await db.Migration();
       await db.syncWarehouses();
       await db.syncUsers();
       await db.syncProducts();

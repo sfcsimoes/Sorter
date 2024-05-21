@@ -27,6 +27,7 @@ import { DatabaseHelper } from "@/db/database";
 import { ConnectionAlert } from "@/components/ConnectionAlert";
 import { useSession } from "@/auth/ctx";
 import { Picker } from "@react-native-picker/picker";
+import utcToLocal from "@/helpers/dateHelper";
 
 const productsAtom = atom<ProductsInShipmentOrder[]>([]);
 const shipmentOrderAtom = atom<ShipmentOrder>({
@@ -53,7 +54,16 @@ function Options({ isBox, transportationBoxId, item }: AuxParameters) {
   const [boxes] = useAtom(boxesAtom);
   const [haveBoxes] = useAtom(haveBoxesAtom);
   const [test] = React.useState();
+  const [box, setBox] = React.useState(isBox);
+  const [id, setId] = React.useState(transportationBoxId);
+  const [product, setProduct] = React.useState(item);
   const [showBoxesItems, setShowBoxesItems] = useAtom(showBoxesItemsAtom);
+
+  React.useEffect(() => {
+    setBox(isBox);
+    setId(transportationBoxId);
+    setProduct(item);
+  }, [isBox, transportationBoxId, item]);
 
   function AddToBox(props: { item: ProductsInShipmentOrder }) {
     const pickerRef = React.useRef<any>();
@@ -147,13 +157,13 @@ function Options({ isBox, transportationBoxId, item }: AuxParameters) {
       );
   }
 
-  if (!isBox && item) {
+  if (!box && product) {
     return (
       <>
         <View>
           <StyledButton
             onPress={() => {
-              var index = readings.findIndex((i) => i == item.product?.ean);
+              var index = readings.findIndex((i) => i == product.product?.ean);
               if (index > -1) {
                 Vibration.vibrate(15);
                 let copy = [...readings];
@@ -171,9 +181,9 @@ function Options({ isBox, transportationBoxId, item }: AuxParameters) {
           <StyledButton
             onPress={() => {
               if (
-                item?.units &&
-                readings.filter((i) => i == item.product?.ean).length >=
-                  item?.units
+                product?.units &&
+                readings.filter((i) => i == product.product?.ean).length >=
+                  product?.units
               ) {
                 Toast.show({
                   type: "error",
@@ -181,8 +191,8 @@ function Options({ isBox, transportationBoxId, item }: AuxParameters) {
                   visibilityTime: 1750,
                 });
               } else {
-                if (item.product?.ean) {
-                  setReadings([...readings, item.product?.ean]);
+                if (product.product?.ean) {
+                  setReadings([...readings, product.product?.ean]);
                   Vibration.vibrate(15);
                 }
               }
@@ -194,14 +204,12 @@ function Options({ isBox, transportationBoxId, item }: AuxParameters) {
         </View>
 
         <View style={{ marginLeft: 8 }}>
-          <AddToBox item={item} />
+          <AddToBox item={product} />
         </View>
       </>
     );
   } else {
-    let showBox = showBoxesItems.find(
-      (i) => i.transportationBoxId == transportationBoxId
-    );
+    let showBox = showBoxesItems.find((i) => i.transportationBoxId == id);
     if (showBox?.show && showBox.show) {
       return (
         <>
@@ -210,7 +218,7 @@ function Options({ isBox, transportationBoxId, item }: AuxParameters) {
               if (showBox) {
                 setShowBoxesItems((options) =>
                   options.map((option) =>
-                    option.transportationBoxId === transportationBoxId
+                    option.transportationBoxId === id
                       ? { ...option, show: false }
                       : option
                   )
@@ -231,7 +239,7 @@ function Options({ isBox, transportationBoxId, item }: AuxParameters) {
               if (showBox) {
                 setShowBoxesItems((options) =>
                   options.map((option) =>
-                    option.transportationBoxId === transportationBoxId
+                    option.transportationBoxId === id
                       ? { ...option, show: true }
                       : option
                   )
@@ -248,21 +256,19 @@ function Options({ isBox, transportationBoxId, item }: AuxParameters) {
   }
 }
 
-function List() {
+function ProductsList() {
   const [products] = useAtom(productsAtom);
   const [readings] = useAtom(readingsAtom);
   const [boxes] = useAtom(boxesAtom);
   const [haveBoxes, setHaveBoxes] = useAtom(haveBoxesAtom);
   const [showBoxesItems, setShowBoxesItems] = useAtom(showBoxesItemsAtom);
 
-  setHaveBoxes(
-    React.useMemo(() => {
-      return (
-        products.filter((i) => i.isInTransportationBox == true).length > 0 ||
+  React.useMemo(() => {
+    setHaveBoxes(
+      products.filter((i) => i.isInTransportationBox == true).length > 0 ||
         boxes.length > 0
-      );
-    }, [products, boxes])
-  );
+    );
+  }, [products, boxes]);
 
   const notInBoxes = React.useMemo(() => {
     return products.filter((i) => i.isInTransportationBox == false);
@@ -591,6 +597,10 @@ function FulfilledOrder(props: {
         Fulfilled By: {props.shipmentOrder.fulfilledBy?.name}
       </Text>
       <Separator />
+      <Text style={styles.sub_heading} role="heading" aria-level="2">
+        At: {utcToLocal(props.shipmentOrder.updatedAt)}
+      </Text>
+      <Separator />
       {notInBoxes.length > 0 ? (
         <>
           <View style={{ marginTop: 8 }}>
@@ -715,7 +725,7 @@ function FulfilledOrder(props: {
   );
 }
 
-export default function App() {
+export default function Order() {
   const params = useLocalSearchParams();
   const { id } = params;
   const [permission, requestPermission] = useCameraPermissions();
@@ -880,14 +890,14 @@ export default function App() {
     ) {
       Toast.show({
         type: "error",
-        text1: "All products have already been read",
+        text1: "Capacity reached",
         visibilityTime: 1750,
       });
     } else {
       setReadings((readings) => [...readings, ean]);
       Toast.show({
         type: "success",
-        text1: "Reading Completed Successfully",
+        text1: "Product Added",
         visibilityTime: 1750,
       });
     }
@@ -916,7 +926,7 @@ export default function App() {
         <Text></Text>
       </CameraView>
       <View style={styles.container}>
-        <List />
+        <ProductsList />
         <ShowCompleteButton show={readAll} />
       </View>
     </View>

@@ -16,6 +16,7 @@ export interface ShipmentOrder {
   updatedAt: string;
   synchronizationId: string;
   fulfilledById?: number;
+  fulfilledBy?: User;
   productsInShipmentOrders: ProductsInShipmentOrder[];
   productsInBoxes: ProductsInShipmentOrder[];
 }

@@ -40,7 +40,7 @@ export default function TabOneScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>
         <FontAwesome name="home" size={24} />
-        Armazens
+        Warehouses
       </Text>
       <View
         style={{

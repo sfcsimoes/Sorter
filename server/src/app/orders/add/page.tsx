@@ -140,7 +140,7 @@ export default function Component() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-const [data, setData] = React.useState<Product[]>([]);
+  const [data, setData] = React.useState<Product[]>([]);
 
   const productSchema = z.object({
     id: z.string(),
@@ -153,26 +153,29 @@ const [data, setData] = React.useState<Product[]>([]);
     units: z.number().min(1),
   });
 
-  const formSchema = z
-    .object({
-      originId: z.string(),
-      destinationId: z.string(),
-      statusId: z.string(),
-      products: z.array(productSchema).min(1, {
-        message: "Choose at least one product",
-      }),
-    })
-    .refine((i) => i.originId !== i.destinationId, {
-      message: "Origin e destination must be different",
-      path: ["destinationId"],
-    });
+  const formSchema = z.object({
+    originId: z.number().min(1, {
+      message: "Choose a origin",
+    }),
+    destinationId: z.number().min(1, {
+      message: "Choose a destination",
+    }),
+    statusId: z.number(),
+    products: z.array(productSchema).min(1, {
+      message: "Choose at least one product",
+    }),
+  })
+  .refine((i) => i.originId !== i.destinationId, {
+    message: "Origin e destination must be different",
+    path: ["destinationId"],
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      originId: "0",
-      destinationId: "0",
-      statusId: "1",
+      originId: 0,
+      destinationId: 0,
+      statusId: 1,
       products: [],
     },
   });
@@ -195,16 +198,18 @@ const [data, setData] = React.useState<Product[]>([]);
   }
 
   React.useEffect(() => {
-    fetch("/api/products")
+    fetch("/api/products?getBoxes=false")
       .then((res) => res.json())
       .then((d) => {
         setData(d);
       })
       .catch((error) => console.log(error));
   }, []);
-  
+
   const [warehouses, setWarehouses] = React.useState<Warehouse[]>([]);
-  const [orderStatusList, setOrderStatusLists] = React.useState<OrderStatus[]>([]);
+  const [orderStatusList, setOrderStatusLists] = React.useState<OrderStatus[]>(
+    [],
+  );
   const [products, setProducts] = React.useState<[]>([]);
 
   React.useEffect(() => {
@@ -308,7 +313,9 @@ const [data, setData] = React.useState<Product[]>([]);
                       <FormItem>
                         <FormLabel>Origin</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
+                          onValueChange={(e) => {
+                            return field.onChange(parseInt(e));
+                          }}
                           defaultValue={field.value.toString()}
                         >
                           <FormControl>
@@ -342,12 +349,14 @@ const [data, setData] = React.useState<Product[]>([]);
                       <FormItem>
                         <FormLabel>Destination</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          onValueChange={(e) => {
+                            return field.onChange(parseInt(e));
+                          }}
+                          defaultValue={field.value.toString()}
                         >
                           <FormControl>
                             <SelectTrigger className="">
-                              <SelectValue placeholder="Select a fruit" />
+                              <SelectValue placeholder="Select a destination" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -374,8 +383,10 @@ const [data, setData] = React.useState<Product[]>([]);
                       <FormItem>
                         <FormLabel>Origin</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          onValueChange={(e) => {
+                            return field.onChange(parseInt(e));
+                          }}
+                          defaultValue={field.value.toString()}
                         >
                           <FormControl>
                             <SelectTrigger className="">
@@ -384,7 +395,7 @@ const [data, setData] = React.useState<Product[]>([]);
                           </FormControl>
                           <SelectContent>
                             <SelectGroup>
-                            {orderStatusList.map((orderStatusItem) => {
+                              {orderStatusList.map((orderStatusItem) => {
                                 return (
                                   <SelectItem
                                     key={orderStatusItem.id.toString()}
@@ -413,7 +424,7 @@ const [data, setData] = React.useState<Product[]>([]);
             </div>
           </CardContent>
         </Card>
-        {origin != "0" ? (
+        {origin != 0 ? (
           <Card className="mb-4">
             <CardHeader>
               <CardTitle>Products</CardTitle>
@@ -568,9 +579,7 @@ const [data, setData] = React.useState<Product[]>([]);
                           <TableCell className="font-semibold">
                             {item.name}
                           </TableCell>
-                          <TableCell>
-                            {item.ean}
-                          </TableCell>
+                          <TableCell>{item.ean}</TableCell>
                           <TableCell>
                             <FormField
                               control={form.control}

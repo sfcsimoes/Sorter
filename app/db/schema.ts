@@ -18,11 +18,8 @@ export const createTable = sqliteTableCreator((name) => `${name}`);
 export const users = createTable('users', {
 	id: int('id', { mode: 'number' }).primaryKey(),
 	name: text('name').notNull(),
-	// email: text('email').notNull(),
-	// password: text('password').notNull(),
-	// settings: text('settings', { mode: 'json' }),
-	createdAt: text("createdAt").default(sql`CURRENT_TIMESTAMP`),
-	updatedAt: text("updatedAt").default(sql`CURRENT_TIMESTAMP`),
+	createdAt: text("createdAt").default(sql`(datetime('now'))`),
+	updatedAt: text("updatedAt").default(sql`(datetime('now'))`),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -34,8 +31,8 @@ export const warehouses = createTable('warehouses', {
 	name: text('name'),
 	address: text('address'),
 	synchronizationId: text("synchronizationId").$defaultFn(() => uuid.v4().toString()),
-	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
-	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
+	createdAt: text("createdAt").default(sql`(datetime('now'))`),
+	updatedAt: text("updatedAt").default(sql`(datetime('now'))`),
 });
 
 export const warehousesRelations = relations(warehouses, ({ many }) => ({
@@ -48,8 +45,8 @@ export const products = createTable('products', {
 	ean: text('ean'),
 	isTransportationBox: int('isTransportationBox', { mode: 'boolean' }),
 	synchronizationId: text("synchronizationId").$defaultFn(() => uuid.v4().toString()),
-	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
-	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
+	createdAt: text("createdAt").default(sql`(datetime('now'))`),
+	updatedAt: text("updatedAt").default(sql`(datetime('now'))`),
 });
 
 export const productsRelations = relations(products, ({ many }) => ({
@@ -60,8 +57,8 @@ export const orderStatus = createTable('orderStatus', {
 	id: int('id', { mode: 'number' }).primaryKey(),
 	name: text('name'),
 	synchronizationId: text("synchronizationId").$defaultFn(() => uuid.v4().toString()),
-	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
-	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
+	createdAt: text("createdAt").default(sql`(datetime('now'))`),
+	updatedAt: text("updatedAt").default(sql`(datetime('now'))`),
 });
 
 export const orderStatusRelations = relations(orderStatus, ({ many }) => ({
@@ -75,8 +72,8 @@ export const shipmentOrders = createTable('shipmentOrders', {
 	statusId: int('statusId').references(() => orderStatus.id),
 	synchronizationId: text("synchronizationId").$defaultFn(() => uuid.v4().toString()),
 	fulfilledById: int('fulfilledById').references(() => users.id),
-	createdAt: text("createdAt").default(sql`(CURRENT_TIMESTAMP)`),
-	updatedAt: text("updatedAt").default(sql`(CURRENT_TIMESTAMP)`),
+	createdAt: text("createdAt").default(sql`(datetime('now'))`),
+	updatedAt: text("updatedAt").default(sql`(datetime('now'))`),
 });
 
 export const shipmentOrdersRelations = relations(shipmentOrders, ({ one, many }) => ({

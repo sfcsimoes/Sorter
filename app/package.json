@@ -16,7 +16,9 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
+    "@hookform/resolvers": "^3.4.2",
     "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-native-community/datetimepicker": "8.0.1",
     "@react-native-picker/picker": "2.7.5",
     "@react-navigation/native": "^6.0.2",
     "@shopify/flash-list": "1.6.4",
@@ -40,6 +42,7 @@
     "jotai-zustand": "^0.3.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-hook-form": "^7.51.5",
     "react-native": "0.74.1",
     "react-native-picker-select": "^9.1.3",
     "react-native-root-siblings": "^5.0.1",
@@ -49,8 +52,8 @@
     "react-native-uuid": "^2.0.2",
     "react-native-web": "~0.19.6",
     "react-router-dom": "^6.22.3",
-    "zustand": "^4.5.2",
-    "@react-native-community/datetimepicker": "8.0.1"
+    "zod": "^3.23.8",
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

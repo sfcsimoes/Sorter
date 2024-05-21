@@ -34,6 +34,8 @@ export async function PUT(req: NextRequest, res: NextResponse) {
         await db.update(warehouses).set({
             name: warehouse.name,
             address: warehouse.address,
+            updatedAt: new Date().toISOString(),
+            synchronizationId: crypto.randomUUID()
         })
             .where(eq(warehouses.id, warehouse.id))
         return NextResponse.json({ message: 'Success' });

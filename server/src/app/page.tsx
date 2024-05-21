@@ -46,7 +46,13 @@ export default function Home() {
 
   React.useEffect(() => {
     async function getOrders() {
-      fetch("/api/orders")
+      fetch("/api/orders", {
+        method: "POST",
+        body: JSON.stringify({
+          page: 1,
+          limit: 10,
+        }),
+      })
         .then((res) => res.json())
         .then((d) => {
           setData(d);

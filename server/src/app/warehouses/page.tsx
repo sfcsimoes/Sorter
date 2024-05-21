@@ -13,12 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  ArrowUpDown,
-  PlusCircle,
-  Loader2,
-  Edit2,
-} from "lucide-react";
+import { ArrowUpDown, PlusCircle, Loader2, Edit2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +54,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/components/ui/use-toast";
 import { atom, useAtom } from "jotai";
 import { Warehouse } from "@/types";
+import utcToLocal from "@/helpers/dateHelper";
 
 const sheetAtom = atom(false);
 const sheetUpdateAtom = atom(false);
@@ -66,7 +62,7 @@ const warehouseAtom = atom<Warehouse>({
   id: 0,
   name: "",
   address: "",
-  synchronizationId:  "",
+  synchronizationId: "",
   createdAt: "",
   updatedAt: "",
 });
@@ -95,28 +91,16 @@ export const columns: ColumnDef<Warehouse>[] = [
   {
     accessorKey: "createdAt",
     header: "Created",
-    cell: ({ row }) => <div>    {new Date(row.getValue("createdAt")).toLocaleDateString(navigator.language, {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })}</div>,
+    cell: ({ row }) => {
+      return utcToLocal(row.getValue("createdAt"));
+    },
   },
   {
     accessorKey: "updatedAt",
     header: "Updated",
-    cell: ({ row }) => (
-      <div className="capitalize">    {new Date(row.getValue("updatedAt")).toLocaleDateString(navigator.language, {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })}</div>
-    ),
+    cell: ({ row }) => {
+      return utcToLocal(row.getValue("updatedAt"));
+    },
   },
   {
     id: "actions",

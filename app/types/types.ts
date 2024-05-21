@@ -36,6 +36,7 @@ export interface Product {
     name: string
     ean: string
     isTransportationBox: boolean
+    synchronizationId: string;
     createdAt: string
     updatedAt: string
 }

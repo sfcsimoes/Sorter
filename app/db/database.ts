@@ -155,7 +155,20 @@ export class DatabaseHelper {
                 const warehouseLocal = await this.db.query.warehouses.findFirst({
                     where: eq(schema.warehouses.id, warehouse.id)
                 });
-                if (!warehouseLocal) {
+                if (warehouseLocal) {
+                    if (warehouseLocal.synchronizationId != warehouse.synchronizationId
+                        && new Date(warehouse.updatedAt) > new Date(warehouseLocal.updatedAt)
+                    ) {
+                        await this.db.update(schema.warehouses)
+                            .set({
+                                name: warehouse.name,
+                                address: warehouse.address,
+                                updatedAt: warehouse.updatedAt,
+                                synchronizationId: warehouse.synchronizationId
+                            })
+                            .where(eq(schema.warehouses.id, warehouseLocal.id))
+                    }
+                } else {
                     await this.db.insert(schema.warehouses).values(warehouse);
                 }
             });
@@ -203,13 +216,26 @@ export class DatabaseHelper {
     }
 
     async syncProducts() {
-        const result = await this.useFetch("/api/products", "GET", "");
+        const result = await this.useFetch("/api/products?getBoxes=true", "GET", "");
         if (result.wasSuccessful) {
             result.data.forEach(async (product: Product) => {
-                const find = await this.db.query.products.findFirst({
+                const productLocal = await this.db.query.products.findFirst({
                     where: eq(schema.products.id, product.id)
                 });
-                if (!find) {
+
+                if (productLocal) {
+                    if (productLocal.synchronizationId != product.synchronizationId
+                        && new Date(product.updatedAt) > new Date(productLocal.updatedAt)
+                    ) {
+                        await this.db.update(schema.products)
+                            .set({
+                                name: product.name,
+                                updatedAt: product.updatedAt,
+                                synchronizationId: product.synchronizationId
+                            })
+                            .where(eq(schema.warehouses.id, productLocal.id))
+                    }
+                } else {
                     await this.db.insert(schema.products).values(product);
                 }
             });

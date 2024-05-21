@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {  PlusCircle, Loader2, Edit2 } from "lucide-react";
+import { PlusCircle, Loader2, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -53,6 +53,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { atom, useAtom } from "jotai";
 import bcrypt from "bcryptjs";
 import { User } from "@/types";
+import utcToLocal from "@/helpers/dateHelper";
 
 const sheetAtom = atom(false);
 const sheetUpdateAtom = atom(false);
@@ -77,34 +78,16 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: "createdAt",
     header: "Created",
-    cell: ({ row }) => (
-      <div className="capitalize">
-        {new Date(row.getValue("createdAt")).toLocaleDateString(navigator.language, {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })}
-      </div>
-    ),
+    cell: ({ row }) => {
+      return utcToLocal(row.getValue("createdAt"));
+    },
   },
   {
     accessorKey: "updatedAt",
     header: "Updated",
-    cell: ({ row }) => (
-      <div className="capitalize">
-        {new Date(row.getValue("updatedAt")).toLocaleDateString(navigator.language, {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })}
-      </div>
-    ),
+    cell: ({ row }) => {
+      return utcToLocal(row.getValue("updatedAt"));
+    },
   },
   {
     id: "actions",
@@ -332,7 +315,6 @@ export default function DataTableDemo() {
   const [isLoading, setLoading] = React.useState(true);
   const [openSheet] = useAtom(sheetAtom);
   const [openSheetUpdate] = useAtom(sheetUpdateAtom);
-
 
   React.useEffect(() => {
     fetch("/api/users")

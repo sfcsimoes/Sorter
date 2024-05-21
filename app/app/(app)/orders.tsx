@@ -19,7 +19,7 @@ import {
 } from "@/types/types";
 import { useWarehouseStore } from "@/Stores/warehouseStore";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { format } from "date-fns";
+import { format, addMinutes } from "date-fns";
 import { ConnectionAlert } from "@/components/ConnectionAlert";
 import { useColorScheme } from "react-native";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
@@ -28,6 +28,7 @@ import Separator from "@/components/Separator";
 import { useServerConnectionStore } from "@/Stores/serverConnectionStore";
 import { SynchronizationAlert } from "@/components/SynchronizationAlert";
 import { useInterfaceStore } from "@/Stores/interfaceStore";
+import utcToLocal from "@/helpers/dateHelper";
 
 export default function Orders() {
   const [text, onChangeText] = React.useState("");
@@ -115,22 +116,32 @@ export default function Orders() {
 
   let ordersFilter = React.useMemo(() => {
     if (text && text.length > 0) {
-      return orders.filter((order) => {
-        return (
-          order.id.toString() == text &&
-          new Date(order.createdAt) >= dateStart &&
-          dateEnd >= new Date(order.createdAt)
+      if (showFilters) {
+        return orders.filter(
+          (order) =>
+            order.id.toString() == text &&
+            new Date(order.createdAt) >= dateStart &&
+            dateEnd >= new Date(order.createdAt)
         );
-      });
+      }
+      return orders.filter((order) => order.id.toString() == text);
     } else if (showFilters) {
-      return orders.filter(
-        (order) =>
-          new Date(order.createdAt) >= dateStart &&
-          dateEnd >= new Date(order.createdAt)
-      );
+      if (showDateEndText && showDateStartText) {
+        return orders.filter(
+          (order) =>
+            new Date(order.createdAt) >= dateStart &&
+            dateEnd >= new Date(order.createdAt)
+        );
+      }
+      if (showDateStartText) {
+        return orders.filter((order) => new Date(order.createdAt) >= dateStart);
+      }
+      if (showDateEndText) {
+        return orders.filter((order) => dateEnd >= new Date(order.createdAt));
+      }
     }
     return orders;
-  }, [orders, text, dateStart, dateEnd, syncOrders, refreshing]);
+  }, [orders, text, dateStart, dateEnd, syncOrders, refreshing, showFilters]);
 
   function AwaitingSync(props: { id: number }) {
     if (
@@ -302,10 +313,7 @@ export default function Orders() {
                           <View style={{ flex: 4 }}>
                             <Text style={styles.title}>Order {item.id}</Text>
                             <Text style={styles.subTitle}>
-                              {format(
-                                new Date(item.createdAt),
-                                "dd/MM/yyyy hh:mm"
-                              )}
+                              {utcToLocal(item.createdAt)}
                             </Text>
                           </View>
 

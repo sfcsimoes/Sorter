@@ -5,7 +5,16 @@ import { products } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
-    return NextResponse.json(await db.query.products.findMany());
+    const { searchParams } = new URL(request.url)
+    const getBoxes = searchParams.get('getBoxes');
+
+    if (getBoxes == 'true') {
+        return NextResponse.json(await db.query.products.findMany());
+    } else {
+        return NextResponse.json(await db.query.products.findMany({
+            where: (products, { eq }) => eq(products.isTransportationBox, false),
+        }));
+    }
 }
 
 export async function POST(req: NextRequest, res: NextResponse) {
@@ -33,6 +42,8 @@ export async function PUT(req: NextRequest, res: NextResponse) {
         var product = productObject.parse(data);
         await db.update(products).set({
             name: product.name,
+            updatedAt: new Date().toISOString(),
+            synchronizationId: crypto.randomUUID()
         })
             .where(eq(products.id, product.id))
         return NextResponse.json({ message: 'Success' });

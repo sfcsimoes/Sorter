@@ -60,6 +60,7 @@ export default function Orders() {
     async function setup() {
       if (warehouseId) {
         if (hasConnection) {
+          await db.syncProducts();
           await db.syncShipmentOrders(warehouseId);
           await db.sendShipmentOrders();
         }

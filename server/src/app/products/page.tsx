@@ -171,7 +171,7 @@ function AddProduct() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
-    let request = await fetch("/api/products", {
+    let request = await fetch("/api/products?getBoxes=true", {
       method: "POST",
       body: JSON.stringify(values),
     });
@@ -372,7 +372,7 @@ export default function DataTableDemo() {
   const [openSheetUpdate] = useAtom(sheetUpdateAtom);
 
   React.useEffect(() => {
-    fetch("/api/products")
+    fetch("/api/products?getBoxes=true")
       .then((res) => res.json())
       .then((d) => {
         setData(d);
